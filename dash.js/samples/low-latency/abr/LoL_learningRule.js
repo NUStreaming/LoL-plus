@@ -132,6 +132,7 @@ class LearningAbrController {
         this.latencyNormalizationFactor=100;
         this.minBitrate=0;
         this.weights=null;
+        this.sortedCenters=null;
     }
 
     getSomBitrateNeurons(mediaInfo){
@@ -164,6 +165,8 @@ class LearningAbrController {
                 }
                 this.somBitrateNeurons.push(neuron);
             }
+
+            this.sortedCenters=this.getInitialKmeansPlusPlusCenters(this.somBitrateNeurons);
         }
         return this.somBitrateNeurons;
     }
@@ -253,7 +256,9 @@ class LearningAbrController {
         this.updateNeurons(currentNeuron,somElements,[throughputNormalized,latency,bufferSize,playbackRate,QoENormalized]);
 
         // create 5 weights
-        let weights=this.getXavierWeights(somElements.length,5);
+        //let weights=this.getXavierWeights(somElements.length,5);
+        // kmeans++ weights
+        let weights=this.sortedCenters[this.sortedCenters.length-1];
         // disable QoE
         weights[4]=0;
 
@@ -268,7 +273,6 @@ class LearningAbrController {
                 somNeuronState.buffer,
                 somNeuronState.playbackRate];
             
-            /*
             // calculate weights
             let throughputWeight=0.4;
             let latencyWeight=0.4;
@@ -284,7 +288,6 @@ class LearningAbrController {
             }
             // QoE is very important if it is decreasing increase the weight!
             let weights=[ throughputWeight, latencyWeight, bufferWeight, playbackRateWeight, QoEWeight ]; // throughput, latency, buffer, playbackRate, QoE
-            */
 
             // give 0 as the targetLatency to find the optimum neuron
             // targetQoE = 1
@@ -314,6 +317,82 @@ class LearningAbrController {
             this.weights=W;
         }
         return this.weights;    
+    }
+
+    getRandomData(size){
+        let dataArray=[];
+        for (let i=0;i<size;i++){
+            let data=[
+                Math.random()*this.getMaxThroughput(), //throughput
+                Math.random(), //latency
+                Math.random(), //buffersize
+                1, //playbackrate,
+                Math.random(), //QoE
+            ];
+            dataArray.push(data);
+        }
+        return dataArray;
+    }
+
+    getInitialKmeansPlusPlusCenters(somElements){
+        let centers=[];
+        let randomDataSet=this.getRandomData(somElements.length**2);
+        centers.push(randomDataSet[0]);
+        let distanceWeights=[1,1,1,1,1];
+        for(let k=1;k<somElements.length;k++){
+            let nextPoint=null;
+            let maxDistance=null;
+            for (let i=0;i<randomDataSet.length;i++){
+                let currentPoint=randomDataSet[i];
+                let minDistance=null;
+                for (let j=0;j<centers.length;j++){
+                    let distance=this.getDistance(currentPoint,centers[j],distanceWeights);
+                    if (minDistance==null || distance<minDistance){
+                        minDistance=distance;
+                    }
+                }
+                if (maxDistance==null || minDistance>maxDistance){
+                    nextPoint=currentPoint;
+                }
+            }
+            centers.push(nextPoint);
+        }
+        // console.log("Centers=",centers);
+        // find the least similar center
+        let maxDistance=null;
+        let leastSimilarIndex=null;
+        for(let i=0;i<centers.length;i++){
+            let distance=0;
+            for(let j=0;j<centers.length;j++){
+                if (i==j) continue;
+                distance+=this.getDistance(centers[i],centers[j],distanceWeights);
+            }
+            if (maxDistance==null || distance>maxDistance){
+                maxDistance=distance;
+                leastSimilarIndex=i;
+            }
+        }
+
+        // move centers to sortedCenters
+        let sortedCenters=[];
+        sortedCenters.push(centers[leastSimilarIndex]);
+        centers.splice(leastSimilarIndex,1);
+        while(centers.length>0){
+            let minDistance=null;
+            let minIndex=null;
+            for(let i=0;i<centers.length;i++){
+                let distance=this.getDistance(sortedCenters[0],centers[i],distanceWeights);
+                if (minDistance==null || distance<minDistance){
+                    minDistance=distance;
+                    minIndex=i;
+                }
+            }
+            sortedCenters.push(centers[minIndex]);
+            centers.splice(minIndex,1);
+        }
+
+        console.log("sortedCenters=",sortedCenters);
+        return sortedCenters;
     }
 }
 
