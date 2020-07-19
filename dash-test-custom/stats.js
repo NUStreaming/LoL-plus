@@ -18,7 +18,28 @@ function computeAverageBitrate(switchHistory, timeRelative) {
     return average;
 }
 
-module.exports = { computeAverageBitrate };
+function computeAveragePlaybackRate(resultByDownload) {
+  let total = 0;
+  let count = 0;
+  let totalNonOne = 0;
+  let countNonOne = 0;
+  for (var key in resultByDownload) {
+    if (resultByDownload.hasOwnProperty(key)) { 
+        total += resultByDownload[key].playbackSpeed;
+        count += 1;
+        if (resultByDownload[key].playbackSpeed > 1 || resultByDownload[key].playbackSpeed < 1) {
+          totalNonOne += resultByDownload[key].playbackSpeed;
+          countNonOne += 1;
+        }
+    }
+  }
+  return {
+    averagePlaybackRate: total / count,
+    averagePlaybackRateNonOne: totalNonOne / countNonOne
+  }
+}
+
+module.exports = { computeAverageBitrate, computeAveragePlaybackRate };
 
 
 

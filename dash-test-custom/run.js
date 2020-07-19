@@ -296,6 +296,10 @@ sleep(waitSeconds * 1000).then(() => {
       } else {
         resultOverall.averageBitrateVariations = 0; 
       }
+      // calculate average playback rates
+      let pbr = stats.computeAveragePlaybackRate(resultByDownload);
+      resultOverall.averagePlaybackRate = pbr.averagePlaybackRate;
+      resultOverall.averagePlaybackRateNonOne = pbr.averagePlaybackRateNonOne;
       // delete unwanted data
       delete resultOverall.currentLatency;
       delete resultOverall.currentBufferLength;
