@@ -18,6 +18,12 @@ class QoeEvaluator {
 
     constructor() {
         this.voPerSegmentQoeInfo = null;
+
+        // Store in case of later use
+        // e.g. in calculateSingleUseQoe()
+        this.segmentDuration = null;
+        this.maxBitrateKbps = null;
+        this.minBitrateKbps = null;
     }
 
     setupPerSegmentQoe(segmentDuration, maxBitrateKbps, minBitrateKbps) {
@@ -101,6 +107,25 @@ class QoeEvaluator {
     // Returns current Per Segment QoeInfo
     getPerSegmentQoe() {
         return this.voPerSegmentQoeInfo;
+    }
+
+    // For one-time use only
+    // Returns totalQoe based on a single set of metrics.
+    calculateSingleUseQoe(segmentBitrate, segmentRebufferTime, currentLatency, currentPlaybackSpeed) {
+        let singleUseQoeInfo = null;
+
+        if (this.segmentDuration && this.maxBitrateKbps && this.minBitrateKbps) {
+            singleUseQoeInfo = this.createQoeInfo('segment', this.segmentDuration, this.maxBitrateKbps, this.minBitrateKbps);
+        }
+
+        if (singleUseQoeInfo) {
+            this.logMetricsInQoeInfo(segmentBitrate, segmentRebufferTime, currentLatency, currentPlaybackSpeed, singleUseQoeInfo);
+            return singleUseQoeInfo.totalQoe;
+        }
+        else {
+            // Something went wrong..
+            return 0;
+        }
     }
 
     // copy(qoeEvaluator) {
