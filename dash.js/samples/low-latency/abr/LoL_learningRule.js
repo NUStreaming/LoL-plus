@@ -14,6 +14,7 @@ function TgcLearningRuleClass() {
     let DashMetrics = factory.getSingletonFactoryByName('DashMetrics');
     let StreamController = factory.getSingletonFactoryByName('StreamController');
     let PlaybackController = factory.getSingletonFactoryByName('PlaybackController');
+    let MediaPlayerModel = factory.getSingletonFactoryByName('MediaPlayerModel');
     let context = this.context;
     let instance;
 
@@ -35,6 +36,7 @@ function TgcLearningRuleClass() {
         let dashMetrics = DashMetrics(context).getInstance();
         let mediaType = rulesContext.getMediaInfo().type;
         let metrics = metricsModel.getMetricsFor(mediaType, true);
+        let mediaPlayerModel = MediaPlayerModel(context).getInstance();
 
         // Dash controllers
         let streamController = StreamController(context).getInstance();
@@ -95,10 +97,28 @@ function TgcLearningRuleClass() {
         let currentTotalQoe = currentQoeInfo.totalQoe;
         console.log("QoE: ",currentTotalQoe);
 
+
+        /*
+        * Dynamic Weights Selector (step 1/2: initialization)
+        */
+        // let userTargetLatency = mediaPlayerModel.getLiveDelay();    // not ideal to use this value as it is used for playback controller and too conservative for this.. 
+        // Todo: To consider specifying param values via UI
+        let dwsTargetLatency = 1.5;
+        let dwsBufferMin = 0.3;                             // for safe buffer constraint
+        let dwsBufferMax = dwsBufferMin + segmentDuration;  // for safe buffer constraint (may not be in use)
+        let dynamicWeightsSelector = new DynamicWeightsSelector(dwsTargetLatency, dwsBufferMin, dwsBufferMax, segmentDuration, qoeEvaluator);
+        console.log('--- dynamicWeightsSelector (initialization) ---');
+        console.log('-- dwsTargetLatency: ', dwsTargetLatency);
+        console.log('-- dwsBufferMin: ', dwsBufferMin);
+        console.log('-- dwsBufferMax: ', dwsBufferMax);
+        console.log('-- segmentDuration: ', segmentDuration);
+        console.log('-- returns dynamicWeightsSelector:');
+        console.log(dynamicWeightsSelector);
+
         /*
          * Select next quality
          */
-        switchRequest.quality = learningController.getNextQuality(mediaInfo,throughput*1000,latency,currentBufferLevel,playbackRate,current, currentTotalQoe);
+        switchRequest.quality = learningController.getNextQuality(mediaInfo,throughput*1000,latency,currentBufferLevel,playbackRate,current, currentTotalQoe, dynamicWeightsSelector);
         switchRequest.reason = { throughput: throughput, latency: latency};
         switchRequest.priority = SwitchRequest.PRIORITY.STRONG;
 
@@ -229,7 +249,12 @@ class LearningAbrController {
                     "playbackRate=",state.playbackRate, "QoE=",state.QoE);
     }
 
-    getNextQuality(mediaInfo, throughput, latency, bufferSize, playbackRate, currentQualityIndex, QoE){
+    getNextQuality(mediaInfo, throughput, latency, bufferSize, playbackRate, currentQualityIndex, QoE, dynamicWeightsSelector){
+        // For Dynamic Weights Selector
+        let currentLatency = latency;
+        let currentBuffer = bufferSize;
+        let currentThroughput = throughput;
+        
         let somElements=this.getSomBitrateNeurons(mediaInfo);
         // normalize throughput
         let throughputNormalized=throughput/this.bitrateNormalizationFactor;
@@ -261,6 +286,25 @@ class LearningAbrController {
         let weights=this.sortedCenters[this.sortedCenters.length-1];
         // disable QoE
         weights[4]=0;
+
+
+        /*
+        * Dynamic Weights Selector (step 2/2: find weights)
+        */
+        let neurons = somElements;
+        let targetState = null;     // not used for now in Method I
+        let weightVector = dynamicWeightsSelector.findWeightVector(neurons, targetState, currentLatency, currentBuffer, currentThroughput);
+        // For debugging
+        console.log('--- dynamicWeightsSelector (find weights) ---');
+        console.log('-- currentLatency: ', currentLatency);
+        console.log('-- currentBuffer: ', currentBuffer);
+        console.log('-- returns weightVector: ');
+        console.log(weightVector);
+        if (weightVector == null || weightVector == -1) {   // null: something went wrong, -1: constraints not met
+            // Select lowest quality as next bitrate
+            return 0;
+        }
+
 
         let minDistance=null;
         let minIndex=null;

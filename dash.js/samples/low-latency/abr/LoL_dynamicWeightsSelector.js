@@ -12,9 +12,10 @@ class DynamicWeightsSelector {
     // First, ABR to create weightsSelector object 
     // at the start of streaming session
     //
-    constructor(bufferMin, bufferMax, segmentDuration, qoeEvaluator) {
+    constructor(targetLatency, bufferMin, bufferMax, segmentDuration, qoeEvaluator) {
 
         // For later use in checking constraints
+        this.targetLatency = targetLatency;
         this.bufferMin = bufferMin;
         this.bufferMax = bufferMax;
         this.segmentDuration = segmentDuration;
@@ -54,7 +55,7 @@ class DynamicWeightsSelector {
     // ABR to input current neurons and target state (only used in Method II)
     // to find the desired weight vector
     //
-    findWeightVector(neurons, targetState, currentLatency, targetLatency, currentBuffer) {
+    findWeightVector(neurons, targetState, currentLatency, currentBuffer, currentThroughput) {
 
         // let minDistance = null; // the lower the better
         let maxQoE = null;      // the higher the better
@@ -145,30 +146,43 @@ class DynamicWeightsSelector {
             // so that ABR can react accordingly
             // e.g. to select lowest bitrate
             // TODO: Sync with ABR
-            if (!checkConstraints(currentLatency, targetLatency, currentBuffer, winnerBitrate)) {
-                winnerWeights = null;
+            if (!this.checkConstraints(currentLatency, currentBuffer, currentThroughput, winnerBitrate)) {
+                winnerWeights = -1;
             } 
         }
 
         return winnerWeights;
     }
 
-    checkConstraints(currentLatency, targetLatency, currentBuffer, throughput, winnerBitrate) {
+    checkConstraints(currentLatency, currentBuffer, currentThroughput, winnerBitrate) {
+        // For debugging
+        console.log('-- currentLatency: ', currentLatency);
+        console.log('-- currentBuffer: ', currentBuffer);
+        console.log('-- currentThroughput: ', currentThroughput);
+        console.log('-- winnerBitrate: ', winnerBitrate);
+
         // Constraint C1
-        if (currentLatency > targetLatency) {
+        if (currentLatency > this.targetLatency) {
+            console.log('[DynamicWeightsSelector] Failed constraint C1!');
             return false;
         }
 
         // Constraint C2
-        if (currentBuffer < this.bufferMin || currentBuffer > this.bufferMax) {
+        // if (currentBuffer < this.bufferMin || currentBuffer > this.bufferMax) {
+        if (currentBuffer < this.bufferMin) {
+            console.log('[DynamicWeightsSelector] Failed constraint C2!');
             return false;
         }
 
         // Constraint C3
-        let downloadTime = (winnerBitrate * this.segmentDuration) / throughput;
+        let downloadTime = (winnerBitrate * this.segmentDuration) / currentThroughput;
+        console.log('-- downloadTime: ', downloadTime);
         if (downloadTime > currentBuffer) {
+            console.log('[DynamicWeightsSelector] Failed constraint C3!');
             return false;
         }
+        
+        return true;
     }
 
     // Taken from heuristicRule
