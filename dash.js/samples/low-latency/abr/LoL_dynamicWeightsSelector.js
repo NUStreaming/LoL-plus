@@ -117,10 +117,12 @@ class DynamicWeightsSelector {
                 /*
                  * Method I(B): Non-QoE-based Learning Rule
                  */
-                // let weightedRebuffer = 0;   // Omit rebuffer penalty for now by setting to 0
+                // let downloadTime = (neuron.bitrate * this.segmentDuration) / currentThroughput;
+                // let rebuffer = Math.max(0, (downloadTime - currentBuffer));
+                // // let weightedRebuffer = weightsObj.buffer * rebufferTime; // TODO: verify if it's sound to use buffer wt on rebuffer value
                 // let weightedLatency = weightsObj.latency * neuron.state.latency;
                 // let weightedPlaybackRate = weightsObj.playbackRate * neuron.state.playbackRate;
-                // let totalQoE = this.qoeEvaluator.calculateSingleUseQoe(neuron.bitrate, weightedRebuffer, weightedLatency, weightedPlaybackRate);
+                // let totalQoE = this.qoeEvaluator.calculateSingleUseQoe(neuron.bitrate, rebuffer, weightedLatency, weightedPlaybackRate);  // Note currently using rebuffer instead of weightedRebuffer
                 // if (maxQoE == null || totalQoE > maxQoE){
                 //     maxQoE = totalQoE;
                 //     winnerWeights = weightVector;
