@@ -107,13 +107,13 @@ function TgcLearningRuleClass() {
         let dwsBufferMin = 0.3;                             // for safe buffer constraint
         let dwsBufferMax = dwsBufferMin + segmentDuration;  // for safe buffer constraint (may not be in use)
         let dynamicWeightsSelector = new DynamicWeightsSelector(dwsTargetLatency, dwsBufferMin, dwsBufferMax, segmentDuration, qoeEvaluator);
-        console.log('--- dynamicWeightsSelector (initialization) ---');
-        console.log('-- dwsTargetLatency: ', dwsTargetLatency);
-        console.log('-- dwsBufferMin: ', dwsBufferMin);
-        console.log('-- dwsBufferMax: ', dwsBufferMax);
-        console.log('-- segmentDuration: ', segmentDuration);
-        console.log('-- returns dynamicWeightsSelector:');
-        console.log(dynamicWeightsSelector);
+        // console.log('--- dynamicWeightsSelector (initialization) ---');
+        // console.log('-- dwsTargetLatency: ', dwsTargetLatency);
+        // console.log('-- dwsBufferMin: ', dwsBufferMin);
+        // console.log('-- dwsBufferMax: ', dwsBufferMax);
+        // console.log('-- segmentDuration: ', segmentDuration);
+        // console.log('-- returns dynamicWeightsSelector:');
+        // console.log(dynamicWeightsSelector);
 
         /*
          * Select next quality
