@@ -327,17 +327,19 @@ class LearningAbrController {
             let latencyWeight=0.4;
             let bufferWeight=0.4;
             let playbackRateWeight=0.4;
+            // QoE is very important if it is decreasing increase the weight!
             // let QoEWeight = ( QoE < minAllowedQoE ) ? 1 : 0.4;
             let QoEWeight =0;
-            if (somNeuron.bitrate>throughput-throughputDelta){
-                if (somNeuron.bitrate!=this.minBitrate){
-                    // encourage to pick smaller bitrates
-                    throughputWeight=100;
-                }
-            }
-            // QoE is very important if it is decreasing increase the weight!
             this.weights=[ throughputWeight, latencyWeight, bufferWeight, playbackRateWeight, QoEWeight ]; // throughput, latency, buffer, playbackRate, QoE
             */
+
+            // special condition downshift immediately
+            if (somNeuron.bitrate>throughput-throughputDelta){
+                if (somNeuron.bitrate!=this.minBitrate){
+                    // encourage to pick smaller bitrates throughputWeight=100
+                    this.weights[0]=100;
+                }
+            }
 
             // calculate the distance with the target
             let distance=this.getDistance(somData,[throughputNormalized,targetLatency,targetBufferLevel,targetPlaybackRate, targetQoe],this.weights);
