@@ -22,7 +22,7 @@ class DynamicWeightsSelector {
         this.qoeEvaluator = qoeEvaluator;
 
         // Generate all possible weight vectors
-        let valueList = [0, 0.2, 0.4, 0.6, 0.8, 1];
+        let valueList = [0.1, 0.2, 0.4, 0.6, 0.8, 1];
         let weightTypeCount = 5;
         this.weightOptions = this.getPermutations(valueList, weightTypeCount);
 
@@ -55,7 +55,7 @@ class DynamicWeightsSelector {
     // ABR to input current neurons and target state (only used in Method II)
     // to find the desired weight vector
     //
-    findWeightVector(neurons, targetState, currentLatency, currentBuffer, currentThroughput) {
+    findWeightVector(neurons, targetState, currentLatency, currentBuffer, currentThroughput, currentPlaybackRate) {
 
         // let minDistance = null; // the lower the better
         let maxQoE = null;      // the higher the better
@@ -107,27 +107,31 @@ class DynamicWeightsSelector {
                  */
                 // (Seems trivial since the winnerWeight will be the one with the highest value)
                 // (Note in learning rule, it's weight * sq-diff btwn neuronState & targetState)
+                /*
                 let weightedQoE = weightsObj.QoE * neuron.state.QoE;
-                if (maxQoE == null || weightedQoE > maxQoE){
+                if ((maxQoE == null || weightedQoE > maxQoE) && this.checkConstraints(currentLatency, currentBuffer, currentThroughput, neuron.bitrate)){
+                    // only set winner if constraints are fullfilled
                     maxQoE = weightedQoE;
                     winnerWeights = weightVector;
                     winnerBitrate = neuron.bitrate;
                 }
+                */
 
                 /*
                  * Method I(B): Non-QoE-based Learning Rule
                  */
-                // let downloadTime = (neuron.bitrate * this.segmentDuration) / currentThroughput;
-                // let rebuffer = Math.max(0, (downloadTime - currentBuffer));
+                let downloadTime = (neuron.bitrate * this.segmentDuration) / currentThroughput;
+                let rebuffer = Math.max(0, (downloadTime - currentBuffer));
                 // // let weightedRebuffer = weightsObj.buffer * rebufferTime; // TODO: verify if it's sound to use buffer wt on rebuffer value
-                // let weightedLatency = weightsObj.latency * neuron.state.latency;
-                // let weightedPlaybackRate = weightsObj.playbackRate * neuron.state.playbackRate;
-                // let totalQoE = this.qoeEvaluator.calculateSingleUseQoe(neuron.bitrate, rebuffer, weightedLatency, weightedPlaybackRate);  // Note currently using rebuffer instead of weightedRebuffer
-                // if (maxQoE == null || totalQoE > maxQoE){
-                //     maxQoE = totalQoE;
-                //     winnerWeights = weightVector;
-                //     winnerBitrate = neuron.bitrate;
-                // }
+                let weightedLatency =  neuron.state.latency + ( neuron.state.latency - currentLatency ) * weightsObj.latency;
+                let weightedPlaybackRate =  neuron.state.playbackRate + (neuron.state.playbackRate - currentPlaybackRate) * weightsObj.playbackRate;
+                let totalQoE = this.qoeEvaluator.calculateSingleUseQoe(neuron.bitrate, rebuffer, weightedLatency, weightedPlaybackRate);  // Note currently using rebuffer instead of weightedRebuffer
+                // console.log("totalQoE=",totalQoE," maxQoE=",maxQoE);
+                if ((maxQoE == null || totalQoE > maxQoE) && this.checkConstraints(weightedLatency, currentBuffer, currentThroughput, downloadTime)){
+                    maxQoE = totalQoE;
+                    winnerWeights = weightVector;
+                    winnerBitrate = neuron.bitrate;
+                }
 
                 /*
                  * Method II: Utility based on neuron distance to target state
@@ -143,44 +147,39 @@ class DynamicWeightsSelector {
         });
 
         // winnerWeights was found, check if constraints are satisfied
-        if (winnerWeights != null && winnerBitrate !== null) {
-            // If constraints are not satisfied, return null 
-            // so that ABR can react accordingly
-            // e.g. to select lowest bitrate
-            // TODO: Sync with ABR
-            if (!this.checkConstraints(currentLatency, currentBuffer, currentThroughput, winnerBitrate)) {
-                winnerWeights = -1;
-            } 
+        if (winnerWeights == null && winnerBitrate == null) {
+            winnerWeights = -1;
         }
 
         return winnerWeights;
     }
 
-    checkConstraints(currentLatency, currentBuffer, currentThroughput, winnerBitrate) {
+    checkConstraints(currentLatency, currentBuffer, currentThroughput, downloadTime) {
         // For debugging
+        /*
         console.log('-- currentLatency: ', currentLatency);
         console.log('-- currentBuffer: ', currentBuffer);
         console.log('-- currentThroughput: ', currentThroughput);
         console.log('-- winnerBitrate: ', winnerBitrate);
+        */
 
         // Constraint C1
         if (currentLatency > this.targetLatency) {
-            console.log('[DynamicWeightsSelector] Failed constraint C1!');
+            //console.log('[DynamicWeightsSelector] Failed constraint C1!');
             return false;
         }
 
         // Constraint C2
         // if (currentBuffer < this.bufferMin || currentBuffer > this.bufferMax) {
         if (currentBuffer < this.bufferMin) {
-            console.log('[DynamicWeightsSelector] Failed constraint C2!');
+            //console.log('[DynamicWeightsSelector] Failed constraint C2!');
             return false;
         }
 
         // Constraint C3
-        let downloadTime = (winnerBitrate * this.segmentDuration) / currentThroughput;
-        console.log('-- downloadTime: ', downloadTime);
+        // console.log('-- downloadTime: ', downloadTime);
         if (downloadTime > currentBuffer) {
-            console.log('[DynamicWeightsSelector] Failed constraint C3!');
+            //console.log('[DynamicWeightsSelector] Failed constraint C3!');
             return false;
         }
         

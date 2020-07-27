@@ -29,6 +29,9 @@ class QoeEvaluator {
     setupPerSegmentQoe(segmentDuration, maxBitrateKbps, minBitrateKbps) {
         // Set up Per Segment QoeInfo
         this.voPerSegmentQoeInfo = this.createQoeInfo('segment', segmentDuration, maxBitrateKbps, minBitrateKbps);
+        this.segmentDuration = segmentDuration;
+        this.maxBitrateKbps = maxBitrateKbps;
+        this.minBitrateKbps = minBitrateKbps;
     }
 
     createQoeInfo(fragmentType, fragmentDuration, maxBitrateKbps, minBitrateKbps) {

@@ -283,28 +283,29 @@ class LearningAbrController {
         // create 5 weights
         //let weights=this.getXavierWeights(somElements.length,5);
         // kmeans++ weights
-        let weights=this.sortedCenters[this.sortedCenters.length-1];
-        // disable QoE
-        weights[4]=0;
-
-
+        if (!this.weights){
+            // initial weights
+            this.weights=this.sortedCenters[this.sortedCenters.length-1];
+        }
+        
         /*
         * Dynamic Weights Selector (step 2/2: find weights)
         */
         let neurons = somElements;
         let targetState = null;     // not used for now in Method I
-        let weightVector = dynamicWeightsSelector.findWeightVector(neurons, targetState, currentLatency, currentBuffer, currentThroughput);
+        let weightVector = dynamicWeightsSelector.findWeightVector(neurons, targetState, currentLatency, currentBuffer, currentThroughput, playbackRate);
         // For debugging
         console.log('--- dynamicWeightsSelector (find weights) ---');
         console.log('-- currentLatency: ', currentLatency);
         console.log('-- currentBuffer: ', currentBuffer);
         console.log('-- returns weightVector: ');
         console.log(weightVector);
-        if (weightVector == null || weightVector == -1) {   // null: something went wrong, -1: constraints not met
-            // Select lowest quality as next bitrate
-            return 0;
+        if (weightVector != null && weightVector != -1) {   // null: something went wrong, -1: constraints not met
+            // update weights
+            this.weights = weightVector;
         }
-
+        // disable QoE
+        this.weights[4]=0;
 
         let minDistance=null;
         let minIndex=null;
@@ -317,6 +318,10 @@ class LearningAbrController {
                 somNeuronState.buffer,
                 somNeuronState.playbackRate];
             
+            /**
+             * disable hardcoded weights
+             */
+            /*
             // calculate weights
             let throughputWeight=0.4;
             let latencyWeight=0.4;
@@ -331,11 +336,11 @@ class LearningAbrController {
                 }
             }
             // QoE is very important if it is decreasing increase the weight!
-            let weights=[ throughputWeight, latencyWeight, bufferWeight, playbackRateWeight, QoEWeight ]; // throughput, latency, buffer, playbackRate, QoE
+            this.weights=[ throughputWeight, latencyWeight, bufferWeight, playbackRateWeight, QoEWeight ]; // throughput, latency, buffer, playbackRate, QoE
+            */
 
-            // give 0 as the targetLatency to find the optimum neuron
-            // targetQoE = 1
-            let distance=this.getDistance(somData,[throughputNormalized,targetLatency,targetBufferLevel,targetPlaybackRate, targetQoe],weights);
+            // calculate the distance with the target
+            let distance=this.getDistance(somData,[throughputNormalized,targetLatency,targetBufferLevel,targetPlaybackRate, targetQoe],this.weights);
             if (minDistance==null || distance<minDistance){
                 minDistance=distance;
                 minIndex=somNeuron.qualityIndex;
