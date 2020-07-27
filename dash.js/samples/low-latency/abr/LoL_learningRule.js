@@ -107,13 +107,13 @@ function TgcLearningRuleClass() {
         let dwsBufferMin = 0.3;                             // for safe buffer constraint
         let dwsBufferMax = dwsBufferMin + segmentDuration;  // for safe buffer constraint (may not be in use)
         let dynamicWeightsSelector = new DynamicWeightsSelector(dwsTargetLatency, dwsBufferMin, dwsBufferMax, segmentDuration, qoeEvaluator);
-        console.log('--- dynamicWeightsSelector (initialization) ---');
-        console.log('-- dwsTargetLatency: ', dwsTargetLatency);
-        console.log('-- dwsBufferMin: ', dwsBufferMin);
-        console.log('-- dwsBufferMax: ', dwsBufferMax);
-        console.log('-- segmentDuration: ', segmentDuration);
-        console.log('-- returns dynamicWeightsSelector:');
-        console.log(dynamicWeightsSelector);
+        // console.log('--- dynamicWeightsSelector (initialization) ---');
+        // console.log('-- dwsTargetLatency: ', dwsTargetLatency);
+        // console.log('-- dwsBufferMin: ', dwsBufferMin);
+        // console.log('-- dwsBufferMax: ', dwsBufferMax);
+        // console.log('-- segmentDuration: ', segmentDuration);
+        // console.log('-- returns dynamicWeightsSelector:');
+        // console.log(dynamicWeightsSelector);
 
         /*
          * Select next quality
@@ -291,19 +291,20 @@ class LearningAbrController {
         /*
         * Dynamic Weights Selector (step 2/2: find weights)
         */
-        let neurons = somElements;
-        let targetState = null;     // not used for now in Method I
-        let weightVector = dynamicWeightsSelector.findWeightVector(neurons, targetState, currentLatency, currentBuffer, currentThroughput);
-        // For debugging
-        console.log('--- dynamicWeightsSelector (find weights) ---');
-        console.log('-- currentLatency: ', currentLatency);
-        console.log('-- currentBuffer: ', currentBuffer);
-        console.log('-- returns weightVector: ');
-        console.log(weightVector);
-        if (weightVector == null || weightVector == -1) {   // null: something went wrong, -1: constraints not met
-            // Select lowest quality as next bitrate
-            return 0;
-        }
+        // let neurons = somElements;
+        // for (let i =0; i< neurons.length ; i++) {
+        //     let somNeuronState = neurons[i].state;
+        //     neurons[i].somData=[somNeuronState.throughput,
+        //         somNeuronState.latency,
+        //         somNeuronState.buffer,
+        //         somNeuronState.playbackRate];
+        // }
+        // let targetState = [throughputNormalized,targetLatency,targetBufferLevel,targetPlaybackRate, targetQoe];
+        // let weightVector = dynamicWeightsSelector.findWeightVector(neurons, targetState, currentLatency, currentBuffer, currentThroughput);
+        // if (weightVector == null || weightVector == -1) {   // null: something went wrong, -1: constraints not met
+        //     // Select lowest quality as next bitrate
+        //     return 0;
+        // }
 
 
         let minDistance=null;
@@ -332,6 +333,11 @@ class LearningAbrController {
             }
             // QoE is very important if it is decreasing increase the weight!
             let weights=[ throughputWeight, latencyWeight, bufferWeight, playbackRateWeight, QoEWeight ]; // throughput, latency, buffer, playbackRate, QoE
+
+            // Uncomment below to use Dynamic Weights Selector's weights //
+            // console.log('-- original weights: ', weights);
+            // weights = weightVector;
+            // console.log('-- new weights: ', weights);
 
             // give 0 as the targetLatency to find the optimum neuron
             // targetQoE = 1

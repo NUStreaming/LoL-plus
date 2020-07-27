@@ -22,7 +22,8 @@ class DynamicWeightsSelector {
         this.qoeEvaluator = qoeEvaluator;
 
         // Generate all possible weight vectors
-        let valueList = [0, 0.2, 0.4, 0.6, 0.8, 1];
+        // let valueList = [0, 0.2, 0.4, 0.6, 0.8, 1];
+        let valueList = [0.2, 0.4, 0.6, 0.8, 1];
         let weightTypeCount = 5;
         this.weightOptions = this.getPermutations(valueList, weightTypeCount);
 
@@ -57,7 +58,7 @@ class DynamicWeightsSelector {
     //
     findWeightVector(neurons, targetState, currentLatency, currentBuffer, currentThroughput) {
 
-        // let minDistance = null; // the lower the better
+        let minDistance = null; // the lower the better
         let maxQoE = null;      // the higher the better
         let winnerWeights = null;
         let winnerBitrate = null;
@@ -104,9 +105,9 @@ class DynamicWeightsSelector {
 
                 /*
                  * Method I(A): QoE-based Learning Rule
+                 *
+                 * (Problem: winnerWeight will be the first one with the highest value, i.e., [0,0,0,0,1])
                  */
-                // (Seems trivial since the winnerWeight will be the one with the highest value)
-                // (Note in learning rule, it's weight * sq-diff btwn neuronState & targetState)
                 let weightedQoE = weightsObj.QoE * neuron.state.QoE;
                 if (maxQoE == null || weightedQoE > maxQoE){
                     maxQoE = weightedQoE;
@@ -116,29 +117,41 @@ class DynamicWeightsSelector {
 
                 /*
                  * Method I(B): Non-QoE-based Learning Rule
+                 * 
+                 * (Problem: winnerWeight will be the first one with the lowest values for lat and pbr, i.e., [0,0,0,0,0] or [0.2,0.2,0.2,0.2,0.2] if we disallow 0)
                  */
-                // let downloadTime = (neuron.bitrate * this.segmentDuration) / currentThroughput;
-                // let rebuffer = Math.max(0, (downloadTime - currentBuffer));
-                // // let weightedRebuffer = weightsObj.buffer * rebufferTime; // TODO: verify if it's sound to use buffer wt on rebuffer value
-                // let weightedLatency = weightsObj.latency * neuron.state.latency;
-                // let weightedPlaybackRate = weightsObj.playbackRate * neuron.state.playbackRate;
-                // let totalQoE = this.qoeEvaluator.calculateSingleUseQoe(neuron.bitrate, rebuffer, weightedLatency, weightedPlaybackRate);  // Note currently using rebuffer instead of weightedRebuffer
-                // if (maxQoE == null || totalQoE > maxQoE){
-                //     maxQoE = totalQoE;
-                //     winnerWeights = weightVector;
-                //     winnerBitrate = neuron.bitrate;
-                // }
+                let downloadTime = (neuron.bitrate * this.segmentDuration) / currentThroughput;
+                let rebuffer = Math.max(0, (downloadTime - currentBuffer));
+
+                let wt;
+                if (weightsObj.latency == 0) wt = 10;
+                else wt = (1 / weightsObj.latency);         // inverse the weight because wt and latency should have positive relationship, i.e., higher latency = higher wt
+                let weightedLatency = wt * neuron.state.latency;
+
+                if (weightsObj.playbackRate == 0) wt = 10;
+                else wt = (1 / weightsObj.playbackRate);    // inverse the weight because wt and pbr should have positive relationship, i.e., higher pbr = higher wt
+                let weightedPlaybackRate = wt * neuron.state.playbackRate;
+
+                let totalQoE = this.qoeEvaluator.calculateSingleUseQoe(neuron.bitrate, rebuffer, weightedLatency, weightedPlaybackRate);
+                if (maxQoE == null || totalQoE > maxQoE){
+                    maxQoE = totalQoE;
+                    winnerWeights = weightVector;
+                    winnerBitrate = neuron.bitrate;
+                }
 
                 /*
                  * Method II: Utility based on neuron distance to target state
                  * (Avoid using this method since it is being used in the actual learningRule so there is double application)
+                 * 
+                 * (Problem: winnerWeight will be the first one with the lowest values, i.e., [0,0,0,0,0] or [0.2,0.2,0.2,0.2,0.2] if we disallow 0)
                  */
-                // let distance = this.getDistance(neuron.somData, targetState, weightVector);
-                // if (minDistance == null || distance < minDistance){
-                //     minDistance = distance;
-                //     winnerWeights = weightVector;
-                //     winnerBitrate = neuron.bitrate;
-                // }
+                let distance = this.getDistance(neuron.somData, targetState, weightVector);
+
+                if (minDistance == null || distance < minDistance){
+                    minDistance = distance;
+                    winnerWeights = weightVector;
+                    winnerBitrate = neuron.bitrate;
+                }
             });
         });
 
