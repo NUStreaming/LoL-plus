@@ -124,7 +124,7 @@ class DynamicWeightsSelector {
                  * (Problem: winnerWeight will be the first one with the lowest values for lat and pbr, i.e., [0,0,0,0,0] or [0.2,0.2,0.2,0.2,0.2] if we disallow 0)
                  */
                 let downloadTime = (neuron.bitrate * this.segmentDuration) / currentThroughput;
-                let rebuffer = Math.max(0, (downloadTime - currentBuffer));        
+                let rebuffer = Math.max(0, (downloadTime - currentBuffer));
 
                 let wt;
                 if (weightsObj.latency == 0) wt = 10;
@@ -135,10 +135,9 @@ class DynamicWeightsSelector {
                 if (weightsObj.playbackRate == 0) wt = 10;
                 else wt = (1 / weightsObj.playbackRate);    // inverse the weight because wt and pbr should have positive relationship, i.e., higher pbr = higher wt
                 let weightedPlaybackRate = wt * neuron.state.playbackRate;
-                //let weightedPlaybackRate =  neuron.state.playbackRate + (neuron.state.playbackRate - currentPlaybackRate) * weightsObj.playbackRate;
 
                 let totalQoE = this.qoeEvaluator.calculateSingleUseQoe(neuron.bitrate, rebuffer, weightedLatency, weightedPlaybackRate);
-                if ((maxQoE == null || totalQoE > maxQoE) && this.checkConstraints(weightedLatency, currentBuffer, currentThroughput, downloadTime)){
+                if ((maxQoE == null || totalQoE > maxQoE)){
                     maxQoE = totalQoE;
                     winnerWeights = weightVector;
                     winnerBitrate = neuron.bitrate;
@@ -181,21 +180,21 @@ class DynamicWeightsSelector {
 
         // Constraint C1
         if (currentLatency > this.targetLatency) {
-            //console.log('[DynamicWeightsSelector] Failed constraint C1!');
+            // console.log('[DynamicWeightsSelector] Failed constraint C1!');
             return false;
         }
 
         // Constraint C2
         // if (currentBuffer < this.bufferMin || currentBuffer > this.bufferMax) {
         if (currentBuffer < this.bufferMin) {
-            //console.log('[DynamicWeightsSelector] Failed constraint C2!');
+            // console.log('[DynamicWeightsSelector] Failed constraint C2!');
             return false;
         }
 
         // Constraint C3
         // console.log('-- downloadTime: ', downloadTime);
         if (downloadTime > currentBuffer) {
-            //console.log('[DynamicWeightsSelector] Failed constraint C3!');
+            // console.log('[DynamicWeightsSelector] Failed constraint C3!');
             return false;
         }
         

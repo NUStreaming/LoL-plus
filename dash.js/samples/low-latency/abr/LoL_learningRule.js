@@ -294,18 +294,33 @@ class LearningAbrController {
         let neurons = somElements;
         let targetState = null;     // not used for now in Method I
         let weightVector = dynamicWeightsSelector.findWeightVector(neurons, targetState, currentLatency, currentBuffer, currentThroughput, playbackRate);
-        // For debugging
-        console.log('--- dynamicWeightsSelector (find weights) ---');
-        console.log('-- currentLatency: ', currentLatency);
-        console.log('-- currentBuffer: ', currentBuffer);
-        console.log('-- returns weightVector: ');
-        console.log(weightVector);
         if (weightVector != null && weightVector != -1) {   // null: something went wrong, -1: constraints not met
             // update weights
             this.weights = weightVector;
         }
         // disable QoE
         this.weights[4]=0;
+        // For debugging
+        console.log('--- dynamicWeightsSelector (find weights) ---');
+        console.log('-- currentLatency: ', currentLatency);
+        console.log('-- currentBuffer: ', currentBuffer);
+        console.log('-- returns weightVector: ');
+        console.log(weightVector);
+
+        /**
+         * hardcoded weights
+         */
+        /*
+        // calculate weights
+        let throughputWeight=0.4;
+        let latencyWeight=0.4;
+        let bufferWeight=0.4;
+        let playbackRateWeight=0.4;
+        // QoE is very important if it is decreasing increase the weight!
+        // let QoEWeight = ( QoE < minAllowedQoE ) ? 1 : 0.4;
+        let QoEWeight =0;
+        this.weights=[ throughputWeight, latencyWeight, bufferWeight, playbackRateWeight, QoEWeight ]; // throughput, latency, buffer, playbackRate, QoE
+        */
 
         let minDistance=null;
         let minIndex=null;
@@ -317,21 +332,6 @@ class LearningAbrController {
                 somNeuronState.latency,
                 somNeuronState.buffer,
                 somNeuronState.playbackRate];
-            
-            /**
-             * disable hardcoded weights
-             */
-            /*
-            // calculate weights
-            let throughputWeight=0.4;
-            let latencyWeight=0.4;
-            let bufferWeight=0.4;
-            let playbackRateWeight=0.4;
-            // QoE is very important if it is decreasing increase the weight!
-            // let QoEWeight = ( QoE < minAllowedQoE ) ? 1 : 0.4;
-            let QoEWeight =0;
-            this.weights=[ throughputWeight, latencyWeight, bufferWeight, playbackRateWeight, QoEWeight ]; // throughput, latency, buffer, playbackRate, QoE
-            */
 
             // special condition downshift immediately
             if (somNeuron.bitrate>throughput-throughputDelta){
