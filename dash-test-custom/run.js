@@ -2,6 +2,7 @@ const fs = require("fs");
 const puppeteer = require("puppeteer-core");
 const normalNetworkPatterns = require("./normal-network-patterns.js");
 const fastNetworkPatterns = require("./fast-network-patterns.js");
+const customNetworkPatterns = require("./custom_traces/output/custom-network-patterns.js");
 const stats = require("./stats");
 const CHROME_PATH ="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
 //const CHROME_PATH = "/opt/google/chrome/chrome";
@@ -16,8 +17,18 @@ if (process.env.npm_package_config_ffmpeg_profile === 'PROFILE_FAST') {
 }
 
 const configNetworkProfile = process.env.npm_package_config_network_profile;
-const NETWORK_PROFILE = patterns[configNetworkProfile] || patterns.PROFILE_CASCADE;
-console.log("Network profile:", NETWORK_PROFILE);
+// const NETWORK_PROFILE = patterns[configNetworkProfile] || patterns.PROFILE_CASCADE;
+let NETWORK_PROFILE;
+if (patterns[configNetworkProfile]) {
+  NETWORK_PROFILE = patterns[configNetworkProfile]
+} else if (customNetworkPatterns[configNetworkProfile]) {
+  NETWORK_PROFILE = customNetworkPatterns[configNetworkProfile]
+} else {
+  console.log("Error! network_profile not found, exiting...")
+  process.exit(0);
+}
+console.log("Network profile:", configNetworkProfile);
+console.log(NETWORK_PROFILE);
 
 // custom
 const readline = require('readline').createInterface({ input: process.stdin, output: process.stdout });
@@ -66,6 +77,7 @@ sleep(waitSeconds * 1000).then(() => {
         */
         let evaluate = {};
         evaluate.testTime = new Date();
+        evaluate.networkProfile = result.networkProfile;
         evaluate.networkPattern = result.networkPattern;
         evaluate.abrStrategy = result.abrStrategy;
         evaluate.customPlaybackControl = result.customPlaybackControl;
@@ -308,6 +320,7 @@ sleep(waitSeconds * 1000).then(() => {
     let result = {
       byDownload: resultByDownload,
       overall: resultOverall,
+      networkProfile: configNetworkProfile,
       networkPattern: NETWORK_PROFILE,
       abrStrategy: metrics.abrStrategy,
       customPlaybackControl: metrics.customPlaybackControl,
