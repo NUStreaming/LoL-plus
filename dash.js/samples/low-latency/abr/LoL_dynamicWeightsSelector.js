@@ -169,6 +169,56 @@ class DynamicWeightsSelector {
         return winnerWeights;
     }
 
+    /* makcay:
+     * tested but now working as expected
+     * for a supplied targetstate it tries all neurons and tries to find minimum distanced weights
+     * and of course it finds the minimum weights to create the minimum distance. 
+     * using distance directly to calculate weights is not working
+    */
+    findWeightVectorByDistance(neurons, targetState) {
+
+        let minDistance = null; // the lower the better
+        let winnerWeights = null;
+        let winnerBitrate = null;
+
+        // For each neuron, m
+        neurons.forEach((neuron) => {
+
+            // For each possible weight vector, z
+            // E.g. For [ throughput, latency, buffer, playbackRate, QoE ]
+            //      Possible weightVector = [ 0.2, 0.4, 0.2, 0, 0.2 ]
+            this.weightOptions.forEach((weightVector) => {
+
+                if (neuron.state.throughput>targetState[0]){
+                    // measured throughput is not enough for this neuron
+                    return;
+                }
+
+                let somNeuronData=[neuron.state.throughput,
+                    neuron.state.latency,
+                    neuron.state.buffer,
+                    neuron.state.playbackRate,
+                    neuron.state.QoE];
+
+                let distance = this.getDistance(somNeuronData, targetState, weightVector);
+
+                if (minDistance == null || distance < minDistance){
+                    minDistance = distance;
+                    winnerWeights = weightVector;
+                    winnerBitrate = neuron.bitrate;
+                }
+                
+            });
+        });
+
+        // winnerWeights was found, check if constraints are satisfied
+        if (winnerWeights == null && winnerBitrate == null) {
+            winnerWeights = -1;
+        }
+
+        return winnerWeights;
+    }
+
     checkConstraints(currentLatency, currentBuffer, currentThroughput, downloadTime) {
         // For debugging
         /*
