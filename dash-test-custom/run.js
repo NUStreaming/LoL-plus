@@ -24,8 +24,8 @@ if (patterns[configNetworkProfile]) {
 } else if (customNetworkPatterns[configNetworkProfile]) {
   NETWORK_PROFILE = customNetworkPatterns[configNetworkProfile]
 } else {
-  console.log("Error! network_profile not found, exiting...")
-  process.exit(0);
+  console.log("Error! network_profile not found, exiting with code 1...");
+  process.exit(1);
 }
 console.log("Network profile:", configNetworkProfile);
 console.log(NETWORK_PROFILE);
@@ -51,6 +51,8 @@ sleep(waitSeconds * 1000).then(() => {
 
         let timestamp = Math.floor(Date.now() / 1000);
         let folder = './results/' + timestamp;
+        if (process.env.npm_package_batchTest_resultFolder)
+          folder = './results/' + process.env.npm_package_batchTest_resultFolder + '/' + timestamp;
         if (!fs.existsSync(folder)){
           fs.mkdirSync(folder);
         }
@@ -162,35 +164,63 @@ sleep(waitSeconds * 1000).then(() => {
         // evaluate.resultsQoe.total = total;
         // Old QoE calculations - END
         
-        
-        // finally, allow user to optionally input comments
-        readline.question('Any comments for this test run: ', data => {
-          evaluate.comments = data;
-          readline.close();
-          
+        // convert string to boolean
+        const batchTestEnabled = (process.env.npm_package_batchTest_enabled == 'true');
+
+        // finally, allow to optionally input comments
+        if (!batchTestEnabled) {
+          // user input
+          readline.question('Any comments for this test run: ', data => {
+            evaluate.comments = data;
+            readline.close();
+            
+            fs.writeFileSync(filenameEvaluate, JSON.stringify(evaluate));
+            fs.writeFileSync(filenameQoePerSegment, JSON.stringify(qoePerSegment));
+            fs.writeFileSync(filenameThroughput, JSON.stringify(throughputMeasurements));
+  
+            // // Generate csv file
+            // let csv = '';
+            // for (var i = 0; i < qoeBySegmentCsv.length; i++) {
+            //   csv += qoeBySegmentCsv[i];
+            //   csv += '\n';
+            // }
+            // fs.writeFileSync(filenameQoePerSegment, csv);
+  
+            console.log('Results files generated:');
+            console.log('> ' + filenameByDownload);
+            console.log('> ' + filenameOverall);
+            console.log('> ' + filenameEvaluate);
+            console.log('> ' + filenameQoePerSegment);
+            console.log('> ' + filenameThroughput);
+            console.log("Test finished. Press cmd+c to exit.");
+          });
+        }
+        else {
+          // batch script input
+          if (process.env.npm_package_batchTest_comments)
+            evaluate.comments = process.env.npm_package_batchTest_comments;
+          else
+            evaluate.comments = "Batch test, no additional comments."
+
           fs.writeFileSync(filenameEvaluate, JSON.stringify(evaluate));
           fs.writeFileSync(filenameQoePerSegment, JSON.stringify(qoePerSegment));
           fs.writeFileSync(filenameThroughput, JSON.stringify(throughputMeasurements));
-
-          // // Generate csv file
-          // let csv = '';
-          // for (var i = 0; i < qoeBySegmentCsv.length; i++) {
-          //   csv += qoeBySegmentCsv[i];
-          //   csv += '\n';
-          // }
-          // fs.writeFileSync(filenameQoePerSegment, csv);
-
+  
           console.log('Results files generated:');
           console.log('> ' + filenameByDownload);
           console.log('> ' + filenameOverall);
           console.log('> ' + filenameEvaluate);
           console.log('> ' + filenameQoePerSegment);
           console.log('> ' + filenameThroughput);
-          console.log("Test finished. Press cmd+c to exit.");
-        });
+          console.log('')
+
+          process.exit(0);
+        }
       }
       else {
         console.log('Unable to generate test results, likely some error occurred.. Please check program output above.')
+        console.log("Exiting with code 1...");
+        process.exit(1);
       }
     })
     .catch(error => console.log(error));

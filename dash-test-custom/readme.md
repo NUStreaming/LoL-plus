@@ -12,3 +12,12 @@ On completing test run, results found in `./results` folder ordered by test run'
 Test run program `dash-test-custom/run.js` here uses `samples/low-latency-custom/index.html` instead of the standard `low-latency` client provided by TGC
 - Reason: customized metrics collection
 - Warning: should note changes to low-latency client and propagate to low-latency-custom
+
+# Batch Test
+Batch test runs x runs across y profiles.
+
+How to run:
+- Enter test profiles in `batch_test_profiles` file
+- Edit `runs_per_profile=5` in `batch_test.sh`
+- Run `bash batch_test.sh`
+- - System will prompt for expt code

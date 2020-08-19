@@ -176,15 +176,20 @@
                 <form action="javascript:applyParameters()">
                     <fieldset>
                         <legend>Configurable parameters</legend>
+                        <!-- Set TARGET latency -->
                         <p>Target Latency (secs): <input type="number" id="target-latency" value="1" min="0" step="0.1"></p>
+                        <!-- <p>Target Latency (secs): <input type="number" id="target-latency" value="1.5" min="0" step="0.1"></p> -->
+                        <!-- <p>Target Latency (secs): <input type="number" id="target-latency" value="2" min="0" step="0.1"></p> -->
+                        <!-- <p>Target Latency (secs): <input type="number" id="target-latency" value="3" min="0" step="0.1"></p> -->
+
                         <p>Min. drift (secs): <input type="number" id="min-drift" value="0.05" min="0.0" max="0.5" step="0.01"></p>
                         <p>Catch-up playback rate (e.g. 0.3 means playback rate is 0.7-1.3x): <input type="number" id="catchup-playback-rate" value="0.5" min="0.0" max="0.5" step="0.01"></p>
                         <!-- TGC addition for custom playback control -->
                         <br/>
                         <!-- Option A: To use DEFAULT playback control -->
-                        <p><input type="checkbox" id="use-custom-playback-control" name="use-custom-playback-control" style="width: 2em;">
+                        <!-- <p><input type="checkbox" id="use-custom-playback-control" name="use-custom-playback-control" style="width: 2em;"> -->
                         <!-- Option B: To use CUSTOM playback control -->
-                        <!-- <p><input checked type="checkbox" id="use-custom-playback-control" name="use-custom-playback-control" style="width: 2em;"> -->
+                        <p><input checked type="checkbox" id="use-custom-playback-control" name="use-custom-playback-control" style="width: 2em;">
                         <label for="use-custom-playback-control">Use custom playback control</label></p>
                         <p style="font-size: 0.9em;">(Note: these params will only be used if the above checkbox is checked)</p>
                         <p>Safe playback buffer min. (secs): <input type="number" id="playback-buffer-min" value="0.5" min="0.0" max="2.0" step="0.1"></p>
@@ -444,6 +449,7 @@
                 const isDynamic = streamInfo && streamInfo.manifestInfo ? streamInfo.manifestInfo.isDynamic : null;
                 const throughput = Math.round(player.getSafeAverageThroughput('video', isDynamic));
                 currentMetrics.throughputKbps = throughput;
+                currentMetrics.throughputTimestampMs = Date.now();
                 // console.log('-- player.getSafeAverageThroughput(): ' + throughput + 'kbps');
 
                 // add current time
