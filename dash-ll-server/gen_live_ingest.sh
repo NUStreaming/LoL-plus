@@ -29,6 +29,15 @@ echo ${FF} -h all | grep ldash
 
 PROFILE_FAST="-b:v:0 100K -s:v:0 640x360 -b:v:1 300K -s:v:1 852x480 -map 0:v:0 -map 0:v:0 -bufsize 200K -adaptation_sets id=0,seg_duration=0.5,streams=0,1"
 PROFILE_NORMAL="-b:v:0 200K -s:v:0 640x360 -b:v:1 600K -s:v:1 852x480 -b:v:2 1000K -s:v:2 1280x720 -map 0:v:0 -map 0:v:0 -map 0:v:0 -bufsize 200K -adaptation_sets id=0,seg_duration=0.5,streams=0,1,2"
+# PROFILE_NORMAL="-b:v:0 200K -s:v:0 640x360 -b:v:1 600K -s:v:1 852x480 -b:v:2 1000K -s:v:2 1280x720 -map 0:v:0 -map 0:v:0 -map 0:v:0 -bufsize 200K -adaptation_sets id=0,seg_duration=1,streams=0,1,2"
+# PROFILE_NORMAL="-b:v:0 200K -s:v:0 640x360 -b:v:1 600K -s:v:1 852x480 -b:v:2 1000K -s:v:2 1280x720 -map 0:v:0 -map 0:v:0 -map 0:v:0 -bufsize 200K -adaptation_sets id=0,seg_duration=2,streams=0,1,2"
+# PROFILE_NORMAL="-b:v:0 200K -s:v:0 640x360 -b:v:1 600K -s:v:1 852x480 -b:v:2 1000K -s:v:2 1280x720 -map 0:v:0 -map 0:v:0 -map 0:v:0 -bufsize 200K -adaptation_sets id=0,seg_duration=4,streams=0,1,2"
+# PROFILE_NORMAL="-b:v:0 200K -s:v:0 640x360 -b:v:1 600K -s:v:1 852x480 -b:v:2 1000K -s:v:2 1280x720 -map 0:v:0 -map 0:v:0 -map 0:v:0 -bufsize 200K -adaptation_sets id=0,seg_duration=8,streams=0,1,2"
+
+# Test different frag_duration (NOTE: need to edit `-frag_type duration` below too)
+# PROFILE_NORMAL="-b:v:0 200K -s:v:0 640x360 -b:v:1 600K -s:v:1 852x480 -b:v:2 1000K -s:v:2 1280x720 -map 0:v:0 -map 0:v:0 -map 0:v:0 -bufsize 200K -adaptation_sets id=0,seg_duration=0.5,frag_duration=0.1,streams=0,1,2"
+# PROFILE_NORMAL="-b:v:0 200K -s:v:0 640x360 -b:v:1 600K -s:v:1 852x480 -b:v:2 1000K -s:v:2 1280x720 -map 0:v:0 -map 0:v:0 -map 0:v:0 -bufsize 200K -adaptation_sets id=0,seg_duration=0.5,frag_duration=0.3,streams=0,1,2"
+# PROFILE_NORMAL="-b:v:0 200K -s:v:0 640x360 -b:v:1 600K -s:v:1 852x480 -b:v:2 1000K -s:v:2 1280x720 -map 0:v:0 -map 0:v:0 -map 0:v:0 -bufsize 200K -adaptation_sets id=0,seg_duration=0.5,frag_duration=0.5,streams=0,1,2"
 
 LADDER_PROFILE=""
 if [ "$PROFILE" == "PROFILE_FAST" ]
@@ -58,3 +67,6 @@ ${HTTP_OPTS} \
 ${PROTO}://${SERVER}:${PORT}/${ID}/${ID}.mpd \
 ${TS_OUT_CMD}
 
+
+# -frag_type every_frame \
+# -frag_type duration \
