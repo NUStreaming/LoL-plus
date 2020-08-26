@@ -835,7 +835,7 @@ function PlaybackController() {
             const s = (cpr * 2) / (1 + Math.pow(Math.E, -d));
             newRate = (1 - cpr) + s;
 
-            console.log('[custom-playback-control_buffer-based] bufferLevel: ' + bufferLevel + ', newRate: ' + newRate);
+            console.log('[custom playback control_buffer-based] bufferLevel: ' + bufferLevel + ', newRate: ' + newRate);
         }
         else {
             // Latency-based
@@ -871,19 +871,24 @@ function PlaybackController() {
             const s = (cpr * 2) / (1 + Math.pow(Math.E, -d));
             newRate = (1 - cpr) + s;
 
-            console.log('[custom-playback-control_latency-based] latency: ' + currentLiveLatency + ', newRate: ' + newRate);
+            console.log('[custom playback control_latency-based] latency: ' + currentLiveLatency + ', newRate: ' + newRate);
         }
 
         // take into account situations in which there are buffer stalls,
         // in which increasing playbackRate to reach target latency will
         // just cause more and more stall situations
+        // if (pStalled) {
+        //     if (bufferLevel > playbackBufferMax) {
+        //         // Safe hence "unstall" it?
+        //         pStalled = false;
+        //     } else if (deltaLatency > 0) {
+        //         // We should never reach this point, but leaving this here first for consistency w the default appraoch
+        //         newRate = 1.0;
+        //     }
+        // }
         if (pStalled) {
-            if (bufferLevel > playbackBufferMax) {
-                // Safe hence "unstall" it?
+            if (bufferLevel > liveDelay / 2) {
                 pStalled = false;
-            } else if (deltaLatency > 0) {
-                // We should never reach this point, but leaving this here first for consistency w the default appraoch
-                newRate = 1.0;
             }
         }
 
