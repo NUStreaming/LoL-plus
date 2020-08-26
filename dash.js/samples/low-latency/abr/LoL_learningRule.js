@@ -292,8 +292,8 @@ class LearningAbrController {
         * Dynamic Weights Selector (step 2/2: find weights)
         */
         let neurons = somElements;
-        let targetState = null;     // not used for now in Method I
         let weightVector = dynamicWeightsSelector.findWeightVector(neurons, targetState, currentLatency, currentBuffer, currentThroughput, playbackRate);
+        //let weightVector = dynamicWeightsSelector.findWeightVectorByDistance(neurons, [throughputNormalized,targetLatency,targetBufferLevel,targetPlaybackRate, targetQoe]);
         if (weightVector != null && weightVector != -1) {   // null: something went wrong, -1: constraints not met
             // update weights
             this.weights = weightVector;
@@ -331,7 +331,8 @@ class LearningAbrController {
             let somData=[somNeuronState.throughput,
                 somNeuronState.latency,
                 somNeuronState.buffer,
-                somNeuronState.playbackRate];
+                somNeuronState.playbackRate,
+                somNeuronState.QoE];
 
             // special condition downshift immediately
             if (somNeuron.bitrate>throughput-throughputDelta){
