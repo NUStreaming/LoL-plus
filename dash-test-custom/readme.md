@@ -21,3 +21,9 @@ How to run:
 - Edit `runs_per_profile=5` in `batch_test.sh`
 - Run `bash batch_test.sh`
 - - System will prompt for expt code
+
+NOTE:
+- If terminate batch_test.sh midway, the 2 background processes may not be killed properly, check with:
+-- `lsof -i :9001`
+-- `ps | grep run_server`
+- And kill if either process is running.

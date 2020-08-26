@@ -85,7 +85,8 @@ do
     echo "Done run ($current_total_run/$num_runs)!"
 
     # short stagger between runs
-    sleep 3
+    echo "Sleeping between runs..."
+    sleep 5
   done
 
   echo "Done Profile $profile!"
