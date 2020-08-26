@@ -41,7 +41,7 @@ const PROFILE_CASCADE = [
       duration: 15,
     },
     {
-      speed: 300,
+      speed: 200,
       duration: 15,
     },
     {
