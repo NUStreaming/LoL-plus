@@ -56,7 +56,7 @@ class DynamicWeightsSelector {
     // ABR to input current neurons and target state (only used in Method II)
     // to find the desired weight vector
     //
-    findWeightVector(neurons, targetState, currentLatency, currentBuffer, currentThroughput, currentPlaybackRate) {
+    findWeightVector(neurons, currentLatency, currentBuffer, currentThroughput, currentPlaybackRate) {
 
         let minDistance = null; // the lower the better
         let maxQoE = null;      // the higher the better

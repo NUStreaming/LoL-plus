@@ -281,7 +281,7 @@ class LearningAbrController {
         this.updateNeurons(currentNeuron,somElements,[throughputNormalized,latency,bufferSize,playbackRate,QoENormalized]);
 
         // create 5 weights
-        //let weights=this.getXavierWeights(somElements.length,5);
+        // let weights=this.getXavierWeights(somElements.length,5);
         // kmeans++ weights
         if (!this.weights){
             // initial weights
@@ -292,14 +292,12 @@ class LearningAbrController {
         * Dynamic Weights Selector (step 2/2: find weights)
         */
         let neurons = somElements;
-        let weightVector = dynamicWeightsSelector.findWeightVector(neurons, targetState, currentLatency, currentBuffer, currentThroughput, playbackRate);
+        let weightVector = dynamicWeightsSelector.findWeightVector(neurons, currentLatency, currentBuffer, currentThroughput, playbackRate);
         //let weightVector = dynamicWeightsSelector.findWeightVectorByDistance(neurons, [throughputNormalized,targetLatency,targetBufferLevel,targetPlaybackRate, targetQoe]);
         if (weightVector != null && weightVector != -1) {   // null: something went wrong, -1: constraints not met
             // update weights
             this.weights = weightVector;
         }
-        // disable QoE
-        this.weights[4]=0;
         // For debugging
         console.log('--- dynamicWeightsSelector (find weights) ---');
         console.log('-- currentLatency: ', currentLatency);
@@ -318,9 +316,11 @@ class LearningAbrController {
         let playbackRateWeight=0.4;
         // QoE is very important if it is decreasing increase the weight!
         // let QoEWeight = ( QoE < minAllowedQoE ) ? 1 : 0.4;
-        let QoEWeight =0;
         this.weights=[ throughputWeight, latencyWeight, bufferWeight, playbackRateWeight, QoEWeight ]; // throughput, latency, buffer, playbackRate, QoE
         */
+
+        // disable QoE
+        this.weights[4]=0;
 
         let minDistance=null;
         let minIndex=null;
