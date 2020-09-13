@@ -15,7 +15,7 @@ If you're not using MacOS, please remove the included "ffmpeg" binary and follow
 ### Included ffmpeg builds
 - MacOS Mojave (10.14.6)
 - Debian Bullseye
-- Ubuntu 18.04
+- Ubuntu 18.04 and 20.04
 
 ### Building ffmpeg
 The included ffmpeg asset is built for MacOS. If you're on different OS, you'll need to replace that binary with one you build yourself. Pull down the "dashll" branch here https://gitlab.com/fflabs/ffmpeg/tree/dashll and follow this guide: https://trac.ffmpeg.org/wiki/CompilationGuide/Generic. Once finished, **copy and replace the included ffmpeg binary with your built one. It must have the same name (ffmeg)**. Please open an issue if you're having trouble getting this running.
