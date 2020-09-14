@@ -105,15 +105,8 @@ function TgcLearningRuleClass() {
         // Todo: To consider specifying param values via UI
         let dwsTargetLatency = 1.5;
         let dwsBufferMin = 0.3;                             // for safe buffer constraint
-        let dwsBufferMax = dwsBufferMin + segmentDuration;  // for safe buffer constraint (may not be in use)
+        let dwsBufferMax = dwsBufferMin + segmentDuration;  // for safe buffer constraint
         let dynamicWeightsSelector = new DynamicWeightsSelector(dwsTargetLatency, dwsBufferMin, dwsBufferMax, segmentDuration, qoeEvaluator);
-        // console.log('--- dynamicWeightsSelector (initialization) ---');
-        // console.log('-- dwsTargetLatency: ', dwsTargetLatency);
-        // console.log('-- dwsBufferMin: ', dwsBufferMin);
-        // console.log('-- dwsBufferMax: ', dwsBufferMax);
-        // console.log('-- segmentDuration: ', segmentDuration);
-        // console.log('-- returns dynamicWeightsSelector:');
-        // console.log(dynamicWeightsSelector);
 
         /*
          * Select next quality
@@ -280,51 +273,49 @@ class LearningAbrController {
         // will punish current if it is not picked
         this.updateNeurons(currentNeuron,somElements,[throughputNormalized,latency,bufferSize,playbackRate,QoENormalized]);
 
+        /*
+         * Option 2: Xavier weights
+         */
         // create 5 weights
-        //let weights=this.getXavierWeights(somElements.length,5);
+        // this.weights = this.getXavierWeights(somElements.length,5);
+        // // this.weights[4]=0;    // to disable QoE factor
+
+        /*
+         * Option 3: Dynamic Weight Selector weights
+         */
         // kmeans++ weights
         if (!this.weights){
             // initial weights
             this.weights=this.sortedCenters[this.sortedCenters.length-1];
         }
-        
-        /*
-        * Dynamic Weights Selector (step 2/2: find weights)
-        */
+        // Dynamic Weights Selector (step 2/2: find weights)
         let neurons = somElements;
-        let weightVector = dynamicWeightsSelector.findWeightVector(neurons, targetState, currentLatency, currentBuffer, currentThroughput, playbackRate);
+        let weightVector = dynamicWeightsSelector.findWeightVector(neurons, null, currentLatency, currentBuffer, currentThroughput, playbackRate);
         //let weightVector = dynamicWeightsSelector.findWeightVectorByDistance(neurons, [throughputNormalized,targetLatency,targetBufferLevel,targetPlaybackRate, targetQoe]);
         if (weightVector != null && weightVector != -1) {   // null: something went wrong, -1: constraints not met
             // update weights
             this.weights = weightVector;
         }
-        // disable QoE
-        this.weights[4]=0;
-        // For debugging
-        console.log('--- dynamicWeightsSelector (find weights) ---');
-        console.log('-- currentLatency: ', currentLatency);
-        console.log('-- currentBuffer: ', currentBuffer);
-        console.log('-- returns weightVector: ');
-        console.log(weightVector);
+        this.weights[4] = 0;     // to disable QoE factor
 
-        /**
-         * hardcoded weights
-         */
         /*
-        // calculate weights
-        let throughputWeight=0.4;
-        let latencyWeight=0.4;
-        let bufferWeight=0.4;
-        let playbackRateWeight=0.4;
-        // QoE is very important if it is decreasing increase the weight!
-        // let QoEWeight = ( QoE < minAllowedQoE ) ? 1 : 0.4;
-        let QoEWeight =0;
-        this.weights=[ throughputWeight, latencyWeight, bufferWeight, playbackRateWeight, QoEWeight ]; // throughput, latency, buffer, playbackRate, QoE
-        */
+         * Option 1: Manual weights
+         */
+        // let throughputWeight = 0.4;
+        // let latencyWeight = 0.4;
+        // let bufferWeight = 0.4;
+        // let playbackRateWeight = 0.4;
+        // // QoE is very important if it is decreasing increase the weight!
+        // // let QoEWeight = ( QoE < minAllowedQoE ) ? 1 : 0.4;
+        // let QoEWeight = 0;   // to disable QoE factor
+        // this.weights = [ throughputWeight, latencyWeight, bufferWeight, playbackRateWeight, QoEWeight ]; // throughput, latency, buffer, playbackRate, QoE
+
 
         let minDistance=null;
         let minIndex=null;
         let winnerNeuron=null;
+        let winnerWeights=null;
+
         for (let i =0; i< somElements.length ; i++) {
             let somNeuron=somElements[i];
             let somNeuronState=somNeuron.state;
@@ -348,18 +339,22 @@ class LearningAbrController {
                 minDistance=distance;
                 minIndex=somNeuron.qualityIndex;
                 winnerNeuron=somNeuron;
+                winnerWeights=this.weights;
             }
             console.log("distance=",distance);
         }
 
-        // update bmu and neighnours with targetQoE=1, targetLatency=0
+        console.log('--- minDistance: ', minDistance);
+        console.log('--- winnerWeights: ', winnerWeights);
+
+        // update bmu and  neighnours with targetQoE=1, targetLatency=0
         this.updateNeurons(winnerNeuron,somElements,[throughputNormalized,targetLatency,targetBufferLevel,targetPlaybackRate, targetQoe]);
 
         return minIndex;
     }
 
     getXavierWeights(neuronCount,weightCount){
-        if (!this.weights){
+        // if (!this.weights){
             let W=[];
             let upperBound=(2/neuronCount)**1/2;
             for(let i=0;i<weightCount;i++){
@@ -367,7 +362,7 @@ class LearningAbrController {
             }
             console.log("Xavier Weights=",W);
             this.weights=W;
-        }
+        // }
         return this.weights;    
     }
 

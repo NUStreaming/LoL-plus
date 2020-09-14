@@ -785,114 +785,68 @@ function PlaybackController() {
     // TGC addition to allow estimatation of future playback rate
     function calculateNewPlaybackRateCustom(liveCatchUpPlaybackRate, currentLiveLatency, liveDelay, minDrift, playbackBufferMin, playbackBufferMax, pStalled, bufferLevel, currentPlaybackRate) {
         /*
-         * Option A: latency- and buffer-based logic are *separate*
-         * Extends the default implementation above, by using buffer to adapt playback when latency is safe (latency given priority)
-         */
-        // // Use the default one first since it's latency-based hence likely more impt and given priority
-        // if (tryNeedToCatchUp(liveCatchUpPlaybackRate, currentLiveLatency, liveDelay, minDrift)) {
-        //     return calculateNewPlaybackRate(liveCatchUpPlaybackRate, currentLiveLatency, liveDelay, pStalled, bufferLevel, currentPlaybackRate);
-        // }
-        // // If latency is safe, use buffer to adapt playback
-        // const cpr = liveCatchUpPlaybackRate;
-        // let deltaBuffer;
-        // if (bufferLevel < playbackBufferMin) {
-        //     // Buffer in danger, to decrease playback rate
-        //     deltaBuffer = bufferLevel - playbackBufferMin;
-        // }
-        // else if (bufferLevel > playbackBufferMax) {
-        //     // Buffer in surplus, to increase playback rate
-        //     deltaBuffer = bufferLevel - playbackBufferMax;
-        // }
-        // else {
-        //     // Buffer in safe zone
-        //     deltaBuffer = 0;    // playbackRate = 1
-        // }
-        // const amplificationBuffer = Math.max(1, (deltaBuffer / 0.05));
-        // const d = deltaBuffer * amplificationBuffer;
-        // // Option A - end
-
-        /*
-         * [DEPRECATED: Superseded by Option C]
-         * Option B: latency- and buffer-based logic are *interwind*
-         * Reworks the default implementation above, by amplifying/dampening latency's playback rate effect given surplus/shortage of buffer (deltaBuffer)
-         * (Todo: We don't dampen for now as it increases latency significantly, not sure why.. Would slowing playback delay the request time for next segment? Shouldn't be the case..)
-         */
-
-        /*
-         * Option C: buffer-based comes first, then latency-based
+         * Option C: Hybrid with buffer-based check first, then latency-based
          */
         const cpr = liveCatchUpPlaybackRate;
         let newRate;
 
-        // Pure buffer-based (for experiment use only)
-        const deltaBuffer = bufferLevel - playbackBufferMin;
-        const d = deltaBuffer * 5;
-        const s = (cpr * 2) / (1 + Math.pow(Math.E, -d));
-        newRate = (1 - cpr) + s;
-        console.log('[expt buffer-based] bufferLevel: ' + bufferLevel + ', newRate: ' + newRate);
+        // // Pure buffer-based (for experiment use only)
+        // const deltaBuffer = bufferLevel - playbackBufferMin;
+        // const d = deltaBuffer * 5;
+        // const s = (cpr * 2) / (1 + Math.pow(Math.E, -d));
+        // newRate = (1 - cpr) + s;
+        // console.log('[expt buffer-based] bufferLevel: ' + bufferLevel + ', newRate: ' + newRate);
 
-        // // Buffer-based
-        // if (bufferLevel < playbackBufferMin) {
-        //     // Buffer in danger, slow down
-        //     const deltaBuffer = bufferLevel - playbackBufferMin;  // -ve value
-        //     const d = deltaBuffer * 5;
+        // Hybrid: Buffer-based
+        if (bufferLevel < playbackBufferMin) {
+            // Buffer in danger, slow down
+            const deltaBuffer = bufferLevel - playbackBufferMin;  // -ve value
+            const d = deltaBuffer * 5;
 
-        //     // Playback rate must be between (1 - cpr) - (1 + cpr)
-        //     // ex: if cpr is 0.5, it can have values between 0.5 - 1.5
-        //     const s = (cpr * 2) / (1 + Math.pow(Math.E, -d));
-        //     newRate = (1 - cpr) + s;
+            // Playback rate must be between (1 - cpr) - (1 + cpr)
+            // ex: if cpr is 0.5, it can have values between 0.5 - 1.5
+            const s = (cpr * 2) / (1 + Math.pow(Math.E, -d));
+            newRate = (1 - cpr) + s;
 
-        //     console.log('[custom playback control_buffer-based] bufferLevel: ' + bufferLevel + ', newRate: ' + newRate);
-        // }
-        // else {
-        //     // Latency-based
-        //     // Buffer is safe, vary playback rate based on latency
-        //     const deltaLatency = currentLiveLatency - liveDelay;
+            console.log('[custom playback control_buffer-based] bufferLevel: ' + bufferLevel + ', newRate: ' + newRate);
+        }
+        else {
+            // Hybrid: Latency-based
+            // Buffer is safe, vary playback rate based on latency
+            const deltaLatency = currentLiveLatency - liveDelay;
 
-        //     // Option B stuff, deprecated.
-        //     // let deltaBuffer;
-        //     // if (bufferLevel < playbackBufferMin) {
-        //     //     // Buffer in danger, to decrease playback rate
-        //     //     deltaBuffer = bufferLevel - playbackBufferMin;  // -ve value
-        //     // }
-        //     // else if (bufferLevel > playbackBufferMax) {
-        //     //     // Buffer in surplus, to increase playback rate
-        //     //     deltaBuffer = bufferLevel - playbackBufferMax;
-        //     // }
-        //     // else {
-        //     //     // Buffer in safe zone
-        //     //     deltaBuffer = 0;
-        //     // }
+            // Option B stuff, deprecated.
+            // let deltaBuffer;
+            // if (bufferLevel < playbackBufferMin) {
+            //     // Buffer in danger, to decrease playback rate
+            //     deltaBuffer = bufferLevel - playbackBufferMin;  // -ve value
+            // }
+            // else if (bufferLevel > playbackBufferMax) {
+            //     // Buffer in surplus, to increase playback rate
+            //     deltaBuffer = bufferLevel - playbackBufferMax;
+            // }
+            // else {
+            //     // Buffer in safe zone
+            //     deltaBuffer = 0;
+            // }
 
-        //     // // Calculate final d value w additional amplification based on buffer occupancy
-        //     // const amplificationBase = 5;                                                        // taken from latency-based logic in default dash code
-        //     // const amplificationBuffer = Math.max(0, (amplificationBase * deltaBuffer / 0.2));   // further amplify for +ve deltaBuffer
-        //     // const amplification = amplificationBase + amplificationBuffer;
-        //     // const d = deltaLatency * amplification;
-        //     // // Option B - end
+            // // Calculate final d value w additional amplification based on buffer occupancy
+            // const amplificationBase = 5;                                                        // taken from latency-based logic in default dash code
+            // const amplificationBuffer = Math.max(0, (amplificationBase * deltaBuffer / 0.2));   // further amplify for +ve deltaBuffer
+            // const amplification = amplificationBase + amplificationBuffer;
+            // const d = deltaLatency * amplification;
+            // // Option B - end
 
-        //     const d = deltaLatency * 5;
+            const d = deltaLatency * 5;
 
-        //     // Playback rate must be between (1 - cpr) - (1 + cpr)
-        //     // ex: if cpr is 0.5, it can have values between 0.5 - 1.5
-        //     const s = (cpr * 2) / (1 + Math.pow(Math.E, -d));
-        //     newRate = (1 - cpr) + s;
+            // Playback rate must be between (1 - cpr) - (1 + cpr)
+            // ex: if cpr is 0.5, it can have values between 0.5 - 1.5
+            const s = (cpr * 2) / (1 + Math.pow(Math.E, -d));
+            newRate = (1 - cpr) + s;
 
-        //     console.log('[custom playback control_latency-based] latency: ' + currentLiveLatency + ', newRate: ' + newRate);
-        // }
+            console.log('[custom playback control_latency-based] latency: ' + currentLiveLatency + ', newRate: ' + newRate);
+        }
 
-        // take into account situations in which there are buffer stalls,
-        // in which increasing playbackRate to reach target latency will
-        // just cause more and more stall situations
-        // if (pStalled) {
-        //     if (bufferLevel > playbackBufferMax) {
-        //         // Safe hence "unstall" it?
-        //         pStalled = false;
-        //     } else if (deltaLatency > 0) {
-        //         // We should never reach this point, but leaving this here first for consistency w the default appraoch
-        //         newRate = 1.0;
-        //     }
-        // }
         if (pStalled) {
             if (bufferLevel > liveDelay / 2) {
                 pStalled = false;
