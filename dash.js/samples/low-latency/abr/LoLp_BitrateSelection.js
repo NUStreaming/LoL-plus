@@ -1,8 +1,8 @@
 /*
  * Authors:
- * May Lim | National University of Singapore | maylim17@u.nus.edu
- * Mehmet N. Akcay | Ozyegin University | necmettin.akcay@ozu.edu.tr
  * Abdelhak Bentaleb | National University of Singapore | bentaleb@comp.nus.edu.sg
+ * Mehmet N. Akcay | Ozyegin University | necmettin.akcay@ozu.edu.tr
+ * May Lim | National University of Singapore | maylim@comp.nus.edu.sg
  */
 var TgcLearningRule;
 
