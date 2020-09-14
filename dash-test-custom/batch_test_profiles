@@ -4,14 +4,8 @@ PROFILE_SPIKE
 PROFILE_SLOW_JITTERS
 PROFILE_FAST_JITTERS
 PROFILE_BelgiumLTE_bicycle
-# PROFILE_BelgiumLTE_bus x
-PROFILE_BelgiumLTE_car
-# PROFILE_BelgiumLTE_foot x
 PROFILE_BelgiumLTE_train
+PROFILE_BelgiumLTE_train_modified
 PROFILE_BelgiumLTE_tram
-# PROFILE_Twitch_Channel_Low1 x
 PROFILE_Twitch_Channel_Low2
-# PROFILE_Twitch_Channel_Med1 x
 PROFILE_Twitch_Channel_Med2
-# PROFILE_Twitch_Channel_High1 x
-# PROFILE_Twitch_Channel_High2 x

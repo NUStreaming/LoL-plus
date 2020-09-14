@@ -312,12 +312,14 @@ sleep(waitSeconds * 1000).then(() => {
 
     // metrics-by-download.json
     let resultByDownload = {};
+    let numStalls = 0;
     if (metrics.byDownload) {
       resultByDownload = metrics.byDownload;
       for (var key in resultByDownload) {
         if (resultByDownload.hasOwnProperty(key)) { 
             resultByDownload[key].averageBitrate = stats.computeAverageBitrate(resultByDownload[key].switchHistory, resultByDownload[key].downloadTimeRelative);
             resultByDownload[key].numSwitches = resultByDownload[key].switchHistory.length;
+            if (resultByDownload[key].numStalls > numStalls)  numStalls = resultByDownload[key].numStalls;
         }
       }
     }
@@ -328,6 +330,7 @@ sleep(waitSeconds * 1000).then(() => {
       resultOverall = metrics.overall;
       resultOverall.averageBitrate = stats.computeAverageBitrate(resultOverall.switchHistory);
       resultOverall.numSwitches = resultOverall.switchHistory.length;
+      resultOverall.numStalls = numStalls;
       // calculate averageBitrateVariations
       if (resultOverall.switchHistory.length > 1) {
         let totalBitrateVariations = 0;
