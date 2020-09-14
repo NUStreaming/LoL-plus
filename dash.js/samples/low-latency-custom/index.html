@@ -5,18 +5,15 @@
     <title>Low latency live stream instantiation example</title>
 
     <!-- <script src="../../dist/dash.all.debug.js"></script> -->
-    <script src="../low-latency/LoL_tputMeasurement.js"></script>
-    <!-- <script src="../low-latency/LoL_tputMeasurement_buffer-based-playback.js"></script> -->
+    <script src="../low-latency/abr/LoLp_tputMeasurement.js"></script>
 
     <!--dash.all.min.js should be used in production over dash.all.debug.js
         Debug files are not compressed or obfuscated making the file size much larger compared with dash.all.min.js-->
     <!--<script src="../../dist/dash.all.min.js"></script>-->
 
-    <script src="../low-latency/abr/LoL_heuristicRule.js" class="code"></script>
-    <script src="../low-latency/abr/LoL_learningRule.js" class="code"></script>
-    <!-- <script src="../low-latency/abr/LoL_learningRule_old.js" class="code"></script> -->
-    <script src="../low-latency/abr/LoL_qoeEvaluator.js" class="code"></script>
-    <script src="../low-latency/abr/LoL_dynamicWeightsSelector.js" class="code"></script>
+    <script src="../low-latency/abr/LoLp_BitrateSelection.js" class="code"></script>
+    <script src="../low-latency/abr/LoLp_QoEEvaluation.js" class="code"></script>
+    <script src="../low-latency/abr/LoLp_WeightSelection.js" class="code"></script>
 
     <script class="code">
         var player, targetLatency, minDrift, catchupPlaybackRate;
@@ -51,10 +48,6 @@
             /* 
             * Option B: Use custom ABR rules
             */
-            // TgcHeuristicRule //
-            // ruleUsed = 'TgcHeuristicRule';  // for result logging later
-            // player.addABRCustomRule('qualitySwitchRules', 'TgcHeuristicRule', TgcHeuristicRule);
-
             // TgcLearningRule //
             ruleUsed = 'TgcLearningRule';   // for result logging later
             player.addABRCustomRule('qualitySwitchRules', 'TgcLearningRule', TgcLearningRule);
@@ -70,16 +63,6 @@
 
             // Update UI
             document.querySelector('#rule-used-tag').innerText = ruleUsed;
-
-            // Set provided abr rule - "abrDynamic" (default), "abrBola" and "abrThroughput" //
-            // player.updateSettings({
-            //     'streaming': {
-            //         'abr': {
-            //             'ABRStrategy': 'abrTGCHeuristic'
-            //             // 'ABRStrategy': 'abrBola'
-            //         }
-            //     }
-            // });
 
             // Set console logging level //
             // Can be LOG_LEVEL_NONE, LOG_LEVEL_FATAL, LOG_LEVEL_ERROR, LOG_LEVEL_WARNING, LOG_LEVEL_INFO or LOG_LEVEL_DEBUG

@@ -2,12 +2,12 @@ const fs = require("fs");
 const puppeteer = require("puppeteer-core");
 const normalNetworkPatterns = require("./normal-network-patterns.js");
 const fastNetworkPatterns = require("./fast-network-patterns.js");
-const customNetworkPatterns = require("./custom_traces/output/custom-network-patterns.js");
+const customNetworkPatterns = require("./custom-network-patterns.js");
 const stats = require("./stats");
 const CHROME_PATH ="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
 //const CHROME_PATH = "/opt/google/chrome/chrome";
 
-const {QoeEvaluator, QoeInfo} = require("../dash.js/samples/low-latency/abr/LoL_qoeEvaluator.js");
+const {QoeEvaluator, QoeInfo} = require("../dash.js/samples/low-latency/abr/LoLp_QoEEvaluation.js");
 
 let patterns;
 if (process.env.npm_package_config_ffmpeg_profile === 'PROFILE_FAST') {

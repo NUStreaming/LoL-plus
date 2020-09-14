@@ -1,18 +1,18 @@
-If you have any questions, or would like help setting up the test env, please file an issue or reach out to 2020-lll-challenge@acmmmsys.org
+# Assets for LoL^+
 
-# Assets for Twitch's ACM MMSys 2020 Grand Challenge
+This repo contains assets for LoL^+ based on Twitch's ACM MMSys 2020 Grand Challenge, [Adaptation Algorithm for Near-Second Latency](https://2020.acmmmsys.org/lll_challenge.php). It contains everything you need to build and test low-latency ABR algorithms locally.
 
-This repo contains assets for Twitch's ACM MMSys 2020 Grand Challenge, [Adaptation Algorithm for Near-Second Latency](https://2020.acmmmsys.org/lll_challenge.php). It contains everything you need to build and test low-latency ABR algorithms locally.
-
-# Submission and Evaluation
-See [this document](evaluation.md) for instructions on how to submit your work, and how it will be evaluated.
+# Cite These Papers
+- Bentaleb, A.,  Akcay, M. N., Lim, M., Begen, A. C., & Zimmermann, R. (2020, Sept). Catching the Moment with LoL^+ in Twitch-LikeLow-Latency Live Streaming Platforms (to appear).
+- Lim, M., Akcay, M. N., Bentaleb, A., Begen, A. C., & Zimmermann, R. (2020, May). When they go high, we go low: low-latency live streaming in dash. js with LoL. In Proceedings of the 11th ACM Multimedia Systems Conference (pp. 321-326).
 
 
 # What's in the Box
 
-- A fork of [Dash.js v3.0.1](https://github.com/Dash-Industry-Forum/dash.js), modified to pre-request low-latency segments
+- A fork of [Dash.js v3.0.1](https://github.com/Dash-Industry-Forum/dash.js).
+- LoL^+ [modules](https://github.com/NUStreaming/LoL-LowOnLatency/tree/master/dash.js/samples/low-latency/abr): LoLpBitrateSelection.js (new), LoLpQoEEvaluation.js (new), LoLpTHMeasurement.js (new), LoLpTHMeasurement.js (new), LoLpTHMeasurement.js (modified)
 - A low-latency [DASH server](https://gitlab.com/fflabs/dash_server), setup and configured for ease of use
-- ffmpeg for MacOS built from the dashll branch (https://gitlab.com/fflabs/ffmpeg/tree/dashll) at commit 0fe5e13b9b76e7fac0c2dac1f4fdc8b37c007d13
+- ffmpeg for Ubuntu, Debian Bullseye, and MacOS 
 
 
 # Requirements
@@ -20,7 +20,7 @@ See [this document](evaluation.md) for instructions on how to submit your work, 
     - If you're using another operating system, don't worry. You'll just have to build ffmpeg from source, and change a few variables. See that README in dash-ll-server/ for instructions.
 - python3
 - node.js v12+
-- Chrome (latest, v80 at the moment)
+- Chrome (latest, v85 at the moment)
 
 
 # How to use
@@ -43,13 +43,15 @@ This will kick off an automated test, during which network conditions will be em
 
 
 ### Configuring Test Runs
-There are several network profiles which can be tested against. In order to set a profile, change the `network_profile` option within the `config` block in the `package.json`. The following profiles are currently available:
+There are several [network profiles] (https://github.com/NUStreaming/LoL-LowOnLatency/tree/master/dash-test-custom) which can be tested against. In order to set a profile, change the `network_profile` option within the `config` block in the `package.json`. The following profiles are currently available:
 
     - PROFILE_CASCADE
     - PROFILE_INTRA_CASCADE
     - PROFILE_SPIKE
     - PROFILE_SLOW_JITTERS
     - PROFILE_FAST_JITTERS
+    - PROFILE_TWITCH_X
+    - PROFILE_LTE_X
 
 You may also add and run your own configs. For examples on how to do so, please use the pattern found in `network-patterns.js`.
 
@@ -112,8 +114,9 @@ If you'd like to discuss changing any of the above, please open an issue.
 ## Important links
 - Local Dash.js low-latency page: http://localhost:3000/samples/low-latency/index.html
 - Local stream URL http://localhost:9001/live/live.mpd
+- When they go high, we go low: low-latency live streaming in dash.js with LoL: https://dl.acm.org/doi/abs/10.1145/3339825.3397043
 - http://streaming.university/ACTE/ Currently the most accurate way to do bandwidth estimation with chunked-transfer encoding. A good place to start.
 
 ## Kudos
-Big thanks to Will Law, the Dash.js team, and the video-dev slack for their help in setting up this low-latency development environment. Kudos to FFLabs for creating the dash server and ffmpeg script.
+Big thanks to Will Law, the Dash.js team, Twitch Team, and the video-dev slack for their help in setting up this low-latency development environment. Kudos to FFLabs for creating the dash server and ffmpeg script.
 
