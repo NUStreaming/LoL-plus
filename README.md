@@ -10,7 +10,7 @@ This repo contains assets for LoL^+ based on Twitch's ACM MMSys 2020 Grand Chall
 # What's in the Box
 
 - A fork of [Dash.js v3.0.1](https://github.com/Dash-Industry-Forum/dash.js).
-- LoL^+ [modules](https://github.com/NUStreaming/LoL-LowOnLatency/tree/master/dash.js/samples/low-latency/abr): LoLpBitrateSelection.js (new), LoLpQoEEvaluation.js (new), LoLpTHMeasurement.js (new), PlaybackController.js (modified)
+- LoL^+ [modules](https://github.com/NUStreaming/LoL-LowOnLatency/tree/master/dash.js/samples/low-latency/abr): LoLpBitrateSelection.js (new), LoLpQoEEvaluation.js (new), LoLpTHMeasurement.js (new), playbackController.js (modified)
 - A low-latency [DASH server](https://gitlab.com/fflabs/dash_server), setup and configured for ease of use
 - ffmpeg for Ubuntu, Debian Bullseye, and MacOS 
 
@@ -43,7 +43,7 @@ This will kick off an automated test, during which network conditions will be em
 
 
 ### Configuring Test Runs
-There are several [network profiles] (https://github.com/NUStreaming/LoL-LowOnLatency/tree/master/dash-test-custom) which can be tested against. In order to set a profile, change the `network_profile` option within the `config` block in the `package.json`. The following profiles are currently available:
+There are several [network profiles](https://github.com/NUStreaming/LoL-LowOnLatency/tree/master/dash-test-custom) which can be tested against. In order to set a profile, change the `network_profile` option within the `config` block in the `package.json`. The following profiles are currently available:
 
     - PROFILE_CASCADE
     - PROFILE_INTRA_CASCADE
