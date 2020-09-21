@@ -302,7 +302,7 @@ class LearningAbrController {
         }
         // Dynamic Weights Selector (step 2/2: find weights)
         let neurons = somElements;
-        let weightVector = dynamicWeightsSelector.findWeightVector(neurons, null, currentLatency, currentBuffer, currentThroughput, playbackRate);
+        let weightVector = dynamicWeightsSelector.findWeightVector(neurons, currentLatency, currentBuffer, currentThroughput, playbackRate);
         //let weightVector = dynamicWeightsSelector.findWeightVectorByDistance(neurons, [throughputNormalized,targetLatency,targetBufferLevel,targetPlaybackRate, targetQoe]);
         if (weightVector != null && weightVector != -1) {   // null: something went wrong, -1: constraints not met
             this.weights = weightVector;
