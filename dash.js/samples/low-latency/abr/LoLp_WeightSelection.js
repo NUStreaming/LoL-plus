@@ -53,11 +53,6 @@ class DynamicWeightsSelector {
             // E.g. For [ throughput, latency, buffer, playbackRate, QoE ]
             //      Possible weightVector = [ 0.2, 0.4, 0.2, 0, 0.2 ]
             this.weightOptions.forEach((weightVector) => {
-                // For debugging
-                // console.log('--- neuron ---')
-                // console.log(neuron);
-                // console.log('--- weightVector ---')
-                // console.log(weightVector);
 
                 // Apply weightVector to neuron, compute utility and determine winnerWeights
 
@@ -91,20 +86,6 @@ class DynamicWeightsSelector {
                     winnerWeights = weightVector;
                     winnerBitrate = neuron.bitrate;
                 }
-
-                /*
-                 * Method II: Utility based on neuron distance to target state
-                 * (Avoid using this method since it is being used in the actual learningRule so there is double application)
-                 */
-                /*
-                let distance = this.getDistance(neuron.somData, targetState, weightVector);
-
-                if (minDistance == null || distance < minDistance){
-                    minDistance = distance;
-                    winnerWeights = weightVector;
-                    winnerBitrate = neuron.bitrate;
-                }
-                */
             });
         });
 
@@ -116,12 +97,6 @@ class DynamicWeightsSelector {
         return winnerWeights;
     }
 
-    /* makcay:
-     * tested but now working as expected
-     * for a supplied targetstate it tries all neurons and tries to find minimum distanced weights
-     * and of course it finds the minimum weights to create the minimum distance. 
-     * using distance directly to calculate weights is not working
-    */
     findWeightVectorByDistance(neurons, targetState) {
 
         let minDistance = null; // the lower the better
