@@ -1,3 +1,11 @@
+/*
+ * Authors:
+ * Abdelhak Bentaleb | National University of Singapore | bentaleb@comp.nus.edu.sg
+ * Mehmet N. Akcay | Ozyegin University | necmettin.akcay@ozu.edu.tr
+ * May Lim | National University of Singapore | maylim@comp.nus.edu.sg
+ */
+
+
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -53,7 +61,6 @@ function BoxParser(/*config*/) {
      */
     function parse(data) {
         if (!data) return null;
-
         if (data.fileStart === undefined) {
             data.fileStart = 0;
         }
@@ -91,14 +98,14 @@ function BoxParser(/*config*/) {
         while (offset < data.byteLength) {
             const boxSize = parseUint32(data, offset);
             const boxType = parseIsoBoxType(data, offset + 4);
-
+	    //console.log('boxType', boxType);
             if (boxSize === 0) {
                 break;
             }
 
             if (offset + boxSize <= data.byteLength) {
                 if (types.indexOf(boxType) >= 0) {
-                    boxInfo = new IsoBoxSearchInfo(offset, true, boxSize);
+                    boxInfo = new IsoBoxSearchInfo(offset, true, boxSize, boxType);
                 } else {
                     lastCompletedOffset = offset + boxSize;
                 }
@@ -251,13 +258,53 @@ function BoxParser(/*config*/) {
 
         return initRange;
     }
+	
+	// Real-time parsing (whenever data is loaded in the buffer payload) of the payload to capture the moof of a chunk
+	function ParsePayload(types, buffer, offset) {
+        if (offset === undefined) {
+            offset = 0;
+        }
+
+        if (!buffer || offset + 8 >= buffer.byteLength) {
+            return new IsoBoxSearchInfo(0, false);
+        }
+
+        const data = (buffer instanceof ArrayBuffer) ? new Uint8Array(buffer) : buffer;
+        let boxInfo;
+        let lastCompletedOffset = 0;
+        while (offset < data.byteLength) {
+            const boxSize = parseUint32(data, offset);
+            const boxType = parseIsoBoxType(data, offset + 4);
+
+            if (boxSize === 0) {
+                break;
+            }
+
+            if (offset + boxSize <= data.byteLength) {
+                if (types.indexOf(boxType) >= 0) {
+                    boxInfo = new IsoBoxSearchInfo(offset, true, boxSize, boxType);
+                } else {
+                    lastCompletedOffset = offset + boxSize;
+                }
+            }
+
+            offset += boxSize;
+        }
+
+        if (!boxInfo) {
+            return new IsoBoxSearchInfo(lastCompletedOffset, false);
+        }
+
+        return boxInfo;
+    }
 
     instance = {
         parse: parse,
         findLastTopIsoBoxCompleted: findLastTopIsoBoxCompleted,
         getMediaTimescaleFromMoov: getMediaTimescaleFromMoov,
         getSamplesInfo: getSamplesInfo,
-        findInitRange: findInitRange
+        findInitRange: findInitRange,
+		ParsePayload: ParsePayload
     };
 
     setup();

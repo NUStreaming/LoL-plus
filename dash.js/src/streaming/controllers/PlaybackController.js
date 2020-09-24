@@ -1,3 +1,10 @@
+/*
+ * Authors:
+ * Abdelhak Bentaleb | National University of Singapore | bentaleb@comp.nus.edu.sg
+ * Mehmet N. Akcay | Ozyegin University | necmettin.akcay@ozu.edu.tr
+ * May Lim | National University of Singapore | maylim@comp.nus.edu.sg
+ */
+
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor

@@ -1,3 +1,11 @@
+/*
+ * Authors:
+ * Abdelhak Bentaleb | National University of Singapore | bentaleb@comp.nus.edu.sg
+ * Mehmet N. Akcay | Ozyegin University | necmettin.akcay@ozu.edu.tr
+ * May Lim | National University of Singapore | maylim@comp.nus.edu.sg
+ */
+
+
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -42,8 +50,9 @@ function FetchLoader(cfg) {
     cfg = cfg || {};
     const requestModifier = cfg.requestModifier;
     const boxParser = cfg.boxParser;
-
     let instance;
+    let previousT = 0;
+    let Count = 1;
 
     function load(httpRequest) {
 
@@ -128,19 +137,21 @@ function FetchLoader(cfg) {
             let offset = 0;
 
             httpRequest.reader = response.body.getReader();
-            let downLoadedData = [];
+			let StartTimeData = [];
+			let EndTimeData = [];
 
-            const processResult = function ({ value, done }) {
-                if (done) {
-                    if (remaining) {
+            const processResult = function ({ value, done }) { // Bug fix Parse whenever data is coming [value] better than 1ms looking that increase CPU
+                if (done) { 
+                    if (remaining) { 
                         // If there is pending data, call progress so network metrics
                         // are correctly generated
-                        // Same structure as https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequestEventTarget/onprogress
+                        // Same structure as https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequestEventTarget/
+						Count = 1;
                         httpRequest.progress({
                             loaded: bytesReceived,
                             total: isNaN(totalBytes) ? bytesReceived : totalBytes,
                             lengthComputable: true,
-                            time: calculateDownloadedTime(downLoadedData, bytesReceived),
+                            time: calculateDownloadedTime(StartTimeData, EndTimeData, bytesReceived),
                             stream: true
                         });
 
@@ -151,17 +162,29 @@ function FetchLoader(cfg) {
                     return;
                 }
 
-                if (value && value.length > 0) {
-                    remaining = concatTypedArray(remaining, value);
+                if (value && value.length > 0 ) { 
+                    remaining = concatTypedArray(remaining, value);	 		
                     bytesReceived += value.length;
-                    downLoadedData.push({
-                        ts: Date.now(),
-                        bytes: value.length
-                    });
-
-                    const boxesInfo = boxParser.findLastTopIsoBoxCompleted(['moov', 'mdat'], remaining, offset);
-                    if (boxesInfo.found) {
-                        const end = boxesInfo.lastCompletedOffset + boxesInfo.size;
+					// Parse the payload and capture the the 'moof' box
+					const Flag1 = boxParser.ParsePayload(['moof'], remaining, offset);  
+							if (Flag1.found) { 
+									// Store the beginning time of each chunk download in array StartTimeData
+									StartTimeData.push({
+										ts: performance.now(),
+										bytes: value.length,
+										id: Count
+									});
+							}	
+					Count = Count + 1;	
+                    const Flag2 = boxParser.findLastTopIsoBoxCompleted(['moov', 'mdat'], remaining, offset);
+                    if (Flag2.found) {
+                        const end = Flag2.lastCompletedOffset + Flag2.size;
+						// Store the end time of each chunk download  with its size in array EndTimeData
+						EndTimeData.push({
+									tse: performance.now(),
+									bytes: remaining.length,
+								    id: Count 
+							});
 
                         // If we are going to pass full buffer, avoid copying it and pass
                         // complete buffer. Otherwise clone the part of the buffer that is completed
@@ -174,8 +197,7 @@ function FetchLoader(cfg) {
                         } else {
                             data = new Uint8Array(remaining.subarray(0, end));
                             remaining = remaining.subarray(end);
-                        }
-
+                        }	
                         // Announce progress but don't track traces. Throughput measures are quite unstable
                         // when they are based in small amount of data
                         httpRequest.progress({
@@ -183,11 +205,10 @@ function FetchLoader(cfg) {
                             lengthComputable: false,
                             noTrace: true
                         });
-
+			
                         offset = 0;
                     } else {
-                        offset = boxesInfo.lastCompletedOffset;
-
+                        offset = Flag2.lastCompletedOffset;
                         // Call progress so it generates traces that will be later used to know when the first byte
                         // were received
                         if (!signaledFirstByte) {
@@ -200,8 +221,7 @@ function FetchLoader(cfg) {
                     }
                 }
                 read(httpRequest, processResult);
-            };
-
+            };	
             read(httpRequest, processResult);
         })
         .catch( function (e) {
@@ -246,22 +266,20 @@ function FetchLoader(cfg) {
             }
         }
     }
-
-    function calculateDownloadedTime(datum, bytesReceived) {
-        datum = datum.filter(data => data.bytes > ((bytesReceived / 4) / datum.length) );
-        if (datum.length > 1) {
-            let time = 0;
-            const avgTimeDistance = (datum[datum.length - 1].ts - datum[0].ts) / datum.length;
-            datum.forEach((data, index) => {
-                // To be counted the data has to be over a threshold
-                const next = datum[index + 1];
-                if (next) {
-                    const distance = next.ts - data.ts;
-                    time += distance < avgTimeDistance ? distance : 0;
-                }
-            });
-            return time;
-        }
+	
+	// Compute the download time of a segment 
+    function calculateDownloadedTime(datum, datumE, bytesReceived) {
+		// Filter the first and last chunks in a segment in both arrays [StartTimeData and EndTimeData]	
+		datum = datum.filter(data => data.id !== 1);
+	    datum = datum.filter((data,i) => i < datum.length-1);
+		datumE = datumE.filter(dataE => dataE.id !== 1);
+		datumE = datumE.filter((dataE,i) => i < datumE.length-1);
+		// Compute the download time of a segment based on the filtered data [last chunk end time - first chunk beginning time]
+		if (datum.length > 1) {
+			let SegDownlaodtime = datumE[datumE.length - 1].tse - datum[0].ts; 
+			// Send SegDownlaodtime to ThroughputHistory.js for SWMA based throughout measurements
+			return SegDownlaodtime;
+		}	
         return null;
     }
 
@@ -278,3 +296,4 @@ FetchLoader.__dashjs_factory_name = 'FetchLoader';
 
 const factory = FactoryMaker.getClassFactory(FetchLoader);
 export default factory;
+
