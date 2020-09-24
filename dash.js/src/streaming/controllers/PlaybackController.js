@@ -813,36 +813,21 @@ function PlaybackController() {
         else {
             // Hybrid: Latency-based
             // Buffer is safe, vary playback rate based on latency
-            const deltaLatency = currentLiveLatency - liveDelay;
 
-            // Option B stuff, deprecated.
-            // let deltaBuffer;
-            // if (bufferLevel < playbackBufferMin) {
-            //     // Buffer in danger, to decrease playback rate
-            //     deltaBuffer = bufferLevel - playbackBufferMin;  // -ve value
-            // }
-            // else if (bufferLevel > playbackBufferMax) {
-            //     // Buffer in surplus, to increase playback rate
-            //     deltaBuffer = bufferLevel - playbackBufferMax;
-            // }
-            // else {
-            //     // Buffer in safe zone
-            //     deltaBuffer = 0;
-            // }
+            // Check if latency is within range of target latency
+            const minDifference = 0.02;
+            if (Math.abs(currentLiveLatency - liveDelay) <= (minDifference * liveDelay)) {
+                newRate = 1;
+            }
+            else {
+                const deltaLatency = currentLiveLatency - liveDelay;
+                const d = deltaLatency * 5;
 
-            // // Calculate final d value w additional amplification based on buffer occupancy
-            // const amplificationBase = 5;                                                        // taken from latency-based logic in default dash code
-            // const amplificationBuffer = Math.max(0, (amplificationBase * deltaBuffer / 0.2));   // further amplify for +ve deltaBuffer
-            // const amplification = amplificationBase + amplificationBuffer;
-            // const d = deltaLatency * amplification;
-            // // Option B - end
-
-            const d = deltaLatency * 5;
-
-            // Playback rate must be between (1 - cpr) - (1 + cpr)
-            // ex: if cpr is 0.5, it can have values between 0.5 - 1.5
-            const s = (cpr * 2) / (1 + Math.pow(Math.E, -d));
-            newRate = (1 - cpr) + s;
+                // Playback rate must be between (1 - cpr) - (1 + cpr)
+                // ex: if cpr is 0.5, it can have values between 0.5 - 1.5
+                const s = (cpr * 2) / (1 + Math.pow(Math.E, -d));
+                newRate = (1 - cpr) + s;
+            }
 
             console.log('[custom playback control_latency-based] latency: ' + currentLiveLatency + ', newRate: ' + newRate);
         }

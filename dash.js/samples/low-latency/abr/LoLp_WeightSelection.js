@@ -12,7 +12,6 @@ class DynamicWeightsSelector {
     //                         playbackRate,
     //                         QoE
     //                     ]
-    // And in pdf: { wt-tput, wt-latency, wt-rebuf, wt-speed, wt-switch }
 
     //
     // First, ABR to create weightsSelector object 
@@ -28,34 +27,12 @@ class DynamicWeightsSelector {
         this.qoeEvaluator = qoeEvaluator;
 
         // Generate all possible weight vectors
-        // let valueList = [0, 0.2, 0.4, 0.6, 0.8, 1];
         let valueList = [0.2, 0.4, 0.6, 0.8, 1];
         let weightTypeCount = 5;
         this.weightOptions = this.getPermutations(valueList, weightTypeCount);
 
-        console.log(this.weightOptions.length); // e.g. 7776
+        // console.log(this.weightOptions.length); // e.g. 7776
     }
-
-
-    // !! Only possible/required for Method II (see below) !! //
-    // (Note: Include somData in neurons
-    // so that we do not depend on the specific keys 
-    // being used in the state, such as tput/latency/etc.)
-    // i.e., neurons = [
-    //     {
-    //         bitrate: 200000,         // already present
-    //         somData: [               // not yet present
-    //             state.throughput, 
-    //             state.latency, 
-    //             state.buffer, 
-    //             state.playbackRate, 
-    //             state.QoE
-    //         ],
-    //         ...
-    //     },
-    //     { ... },
-    //     { ... }
-    // ]
 
     //
     // Next, at each segment boundary, 
@@ -64,7 +41,7 @@ class DynamicWeightsSelector {
     //
     findWeightVector(neurons, currentLatency, currentBuffer, currentThroughput, currentPlaybackRate) {
 
-        let minDistance = null; // the lower the better
+        // let minDistance = null; // the lower the better
         let maxQoE = null;      // the higher the better
         let winnerWeights = null;
         let winnerBitrate = null;
@@ -76,20 +53,6 @@ class DynamicWeightsSelector {
             // E.g. For [ throughput, latency, buffer, playbackRate, QoE ]
             //      Possible weightVector = [ 0.2, 0.4, 0.2, 0, 0.2 ]
             this.weightOptions.forEach((weightVector) => {
-
-                /*
-                 * Constraint C5: Sum of weights equals 1
-                 * i.e. Skip this weightVector if sum is more than 1
-                 */
-                // (Omit C5 for now)
-                // let weightsTotal = 0;
-                // weightVector.forEach((w) => {
-                //     weightsTotal += w
-                //     if (weightsTotal > 1) {
-                //         continue;
-                //     }
-                // })
-
                 // For debugging
                 // console.log('--- neuron ---')
                 // console.log(neuron);
