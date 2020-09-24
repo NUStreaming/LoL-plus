@@ -626,7 +626,7 @@ function PlaybackController() {
         // return settings.get().streaming.liveCatchUpPlaybackRate > 0 && getTime() > 0 &&
         //     Math.abs(getCurrentLiveLatency() - mediaPlayerModel.getLiveDelay()) > settings.get().streaming.liveCatchUpMinDrift;
 
-        // TGC addition to check if use custom playback control
+        // Addition to check if use custom playback control
         if (settings.get().streaming.playbackBufferMin && settings.get().streaming.playbackBufferMax) {
             return tryNeedToCatchUpCustom(
                     settings.get().streaming.liveCatchUpPlaybackRate,
@@ -647,19 +647,19 @@ function PlaybackController() {
         }
     }
 
-    // TGC addition to allow estimatation of future playback rate
+    // Addition to allow ABR to estimate future playback rate
     function tryNeedToCatchUp(liveCatchUpPlaybackRate, currentLiveLatency, liveDelay, liveCatchUpMinDrift) {
         return liveCatchUpPlaybackRate > 0 && getTime() > 0 &&
             Math.abs(currentLiveLatency - liveDelay) > liveCatchUpMinDrift;
     }
 
-    // TGC addition to allow estimatation of future playback rate
+    // Addition to allow ABR to estimate future playback rate
     function tryNeedToCatchUpCustom(liveCatchUpPlaybackRate, currentLiveLatency, liveDelay, liveCatchUpMinDrift, currentBuffer, playbackBufferMin, playbackBufferMax) {
         return liveCatchUpPlaybackRate > 0 && getTime() > 0 &&
             ((Math.abs(currentLiveLatency - liveDelay) > liveCatchUpMinDrift) || (currentBuffer < playbackBufferMin || currentBuffer > playbackBufferMax));
     }
 
-    // Original implementation
+    // Original dash.js implementation
     // function startPlaybackCatchUp() {
     //     if (videoModel) {
     //         const cpr = settings.get().streaming.liveCatchUpPlaybackRate;
@@ -698,7 +698,7 @@ function PlaybackController() {
     //     }
     // }
 
-    // TGC addition to allow estimatation of future playback rate
+    // Addition to allow UI to toggle between custom and default dash.js playback control
     function startPlaybackCatchUp() {
         if (videoModel) {
             let results;
@@ -739,7 +739,7 @@ function PlaybackController() {
         }
     }
 
-    // TGC addition to allow estimatation of future playback rate
+    // Addition to allow ABR to estimate future playback rate
     function calculateNewPlaybackRate(liveCatchUpPlaybackRate, currentLiveLatency, liveDelay, pStalled, bufferLevel, currentPlaybackRate) {
         // if (videoModel) {
             // const cpr = settings.get().streaming.liveCatchUpPlaybackRate;
@@ -782,11 +782,8 @@ function PlaybackController() {
         // }
     }
 
-    // TGC addition to allow estimatation of future playback rate
+    // Addition to allow ABR to estimate future playback rate
     function calculateNewPlaybackRateCustom(liveCatchUpPlaybackRate, currentLiveLatency, liveDelay, minDrift, playbackBufferMin, playbackBufferMax, pStalled, bufferLevel, currentPlaybackRate) {
-        /*
-         * Option C: Hybrid with buffer-based check first, then latency-based
-         */
         const cpr = liveCatchUpPlaybackRate;
         let newRate;
 

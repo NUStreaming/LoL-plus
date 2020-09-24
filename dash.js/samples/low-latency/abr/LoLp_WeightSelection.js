@@ -158,7 +158,6 @@ class DynamicWeightsSelector {
             });
         });
 
-        // winnerWeights was found, check if constraints are satisfied
         if (winnerWeights == null && winnerBitrate == null) {
             winnerWeights = -1;
         }
@@ -167,31 +166,21 @@ class DynamicWeightsSelector {
     }
 
     checkConstraints(currentLatency, currentBuffer, currentThroughput, downloadTime) {
-        // For debugging
-        /*
-        console.log('-- currentLatency: ', currentLatency);
-        console.log('-- currentBuffer: ', currentBuffer);
-        console.log('-- currentThroughput: ', currentThroughput);
-        console.log('-- winnerBitrate: ', winnerBitrate);
-        */
-
-        // Constraint C1
+        // A1
         if (currentLatency > this.targetLatency) {
-            // console.log('[DynamicWeightsSelector] Failed constraint C1!');
+            // console.log('[DynamicWeightsSelector] Failed A1!');
             return false;
         }
 
-        // Constraint C2
-        // if (currentBuffer < this.bufferMin || currentBuffer > this.bufferMax) {
+        // A2
         if (currentBuffer < this.bufferMin) {
-            // console.log('[DynamicWeightsSelector] Failed constraint C2!');
+            // console.log('[DynamicWeightsSelector] Failed A2!');
             return false;
         }
 
-        // Constraint C3
-        // console.log('-- downloadTime: ', downloadTime);
+        // A3
         if (downloadTime > currentBuffer) {
-            // console.log('[DynamicWeightsSelector] Failed constraint C3!');
+            // console.log('[DynamicWeightsSelector] Failed A3!');
             return false;
         }
         
