@@ -13,6 +13,7 @@ This repo contains assets for LoL^+ based on Twitch's ACM MMSys 2020 Grand Chall
 - LoL^+ [modules](https://github.com/NUStreaming/LoL-plus/tree/master/dash.js/samples/low-latency/abr): LoLpBitrateSelection.js (new), LoLpQoEEvaluation.js (new), FetchLoader.js (modified), BoxParser.js (modified), and playbackController.js (modified). Note that Bandwdith measurment module is added to FetchLoader and BoxParser.
 - A low-latency [DASH server](https://gitlab.com/fflabs/dash_server), setup and configured for ease of use
 - ffmpeg for Ubuntu, Debian Bullseye, and MacOS 
+- [LoL^+ Sample Test Page](https://github.com/NUStreaming/LoL-plus/tree/master/dash.js/samples/low-latency)
 
 
 # Requirements
