@@ -246,13 +246,15 @@ class LearningAbrController {
                     "playbackRate=",state.playbackRate, "QoE=",state.QoE);
     }
 
-    getDownShiftNeuron(currentNeuron){
+    getDownShiftNeuron(currentNeuron, currentThroughput){
         let maxSuitableBitrate=0;
         let result=currentNeuron;
         if (this.somBitrateNeurons){
             for(let i=0;i<this.somBitrateNeurons.length;i++){
                 let n=this.somBitrateNeurons[i];
-                if (n.bitrate<currentNeuron.bitrate && n.bitrate>maxSuitableBitrate){
+                if (n.bitrate<currentNeuron.bitrate 
+                    && n.bitrate>maxSuitableBitrate
+                    && currentThroughput>n.bitrate){
                     // possible downshiftable neuron
                     maxSuitableBitrate=n.bitrate;
                     result=n;
@@ -298,7 +300,7 @@ class LearningAbrController {
         if (currentBuffer<downloadTime+dynamicWeightsSelector.getMinBuffer()){
             // will drop to below safe buffer, switch to minimum immediately
             console.log("In order to avoid stall downshifting")
-            return this.getDownShiftNeuron(currentNeuron).qualityIndex;
+            return this.getDownShiftNeuron(currentNeuron, currentThroughput).qualityIndex;
         }
 
         // Weight Selection //
@@ -348,8 +350,8 @@ class LearningAbrController {
             let somNeuron=somElements[i];
             let somNeuronState=somNeuron.state;
             let somData=[somNeuronState.throughput,
-                Math.max(somNeuronState.latency,targetLatency),
-                Math.min(somNeuronState.buffer,targetBufferLevel),
+                somNeuronState.latency,
+                somNeuronState.buffer,
                 somNeuronState.playbackRate,
                 somNeuronState.QoE];
 
@@ -359,6 +361,12 @@ class LearningAbrController {
                     // encourage to pick smaller bitrates throughputWeight=100
                     this.weights[0]=100;
                 }
+            }
+
+            if (somNeuronState.buffer>targetBufferLevel){
+                // higher than target buffer is a better thing to do
+                // if buffer is higher make the weight negative to get lower distance
+                this.weights[2]=-1*this.weights[2];
             }
 
             // calculate the distance with the target
