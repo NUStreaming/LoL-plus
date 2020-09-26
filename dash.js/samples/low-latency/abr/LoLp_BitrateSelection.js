@@ -246,6 +246,22 @@ class LearningAbrController {
                     "playbackRate=",state.playbackRate, "QoE=",state.QoE);
     }
 
+    getDownShiftNeuron(currentNeuron){
+        let maxSuitableBitrate=0;
+        let result=currentNeuron;
+        if (this.somBitrateNeurons){
+            for(let i=0;i<this.somBitrateNeurons.length;i++){
+                let n=this.somBitrateNeurons[i];
+                if (n.bitrate<currentNeuron.bitrate && n.bitrate>maxSuitableBitrate){
+                    // possible downshiftable neuron
+                    maxSuitableBitrate=n.bitrate;
+                    result=n;
+                }
+            }
+        } 
+        return result;
+    }
+
     getNextQuality(mediaInfo, throughput, latency, bufferSize, playbackRate, currentQualityIndex, QoE, dynamicWeightsSelector){
         // For Dynamic Weights Selector
         let currentLatency = latency;
@@ -281,8 +297,8 @@ class LearningAbrController {
         let downloadTime = (currentNeuron.bitrate * dynamicWeightsSelector.getSegmentDuration()) / currentThroughput;
         if (currentBuffer<downloadTime+dynamicWeightsSelector.getMinBuffer()){
             // will drop to below safe buffer, switch to minimum immediately
-            console.log("In order to avoid stall picking minimum index.")
-            return this.minBitrateNeuron.qualityIndex;
+            console.log("In order to avoid stall downshifting")
+            return this.getDownShiftNeuron(currentNeuron).qualityIndex;
         }
 
         // Weight Selection //

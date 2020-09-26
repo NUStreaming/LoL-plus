@@ -294,10 +294,7 @@
             });
 
             video.addEventListener('waiting', (e) => {
-                const currentBuffer = player.getDashMetrics().getCurrentBufferLevel("video");
-                if (currentBuffer==0) {
-                    stallingAt = performance.now();
-                }
+                stallingAt = performance.now();
             });
 
             video.addEventListener('timeupdate', () => {
