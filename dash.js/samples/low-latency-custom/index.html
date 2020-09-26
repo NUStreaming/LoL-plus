@@ -531,9 +531,11 @@
 
             video.addEventListener('waiting', (e) => {
                 const currentBuffer = player.getDashMetrics().getCurrentBufferLevel("video");
-                stallingAt = performance.now();
-                history.numStalls += 1;
-                console.log("Stall now with currentBuffer="+currentBuffer);
+                if (currentBuffer==0) {
+                    stallingAt = performance.now();
+                    history.numStalls += 1;
+                    console.log("Stall now with currentBuffer="+currentBuffer);
+                }
             });
 
             video.addEventListener('timeupdate', () => {
