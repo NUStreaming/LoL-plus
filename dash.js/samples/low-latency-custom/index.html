@@ -4,8 +4,8 @@
     <meta charset="utf-8"/>
     <title>Low latency live stream instantiation example</title>
 
-    <script src="../../dist/dash.all.debug.js"></script>
-    <!-- <script src="../low-latency/abr/dash.js"></script> -->
+    <!-- <script src="../../dist/dash.all.debug.js"></script> -->
+    <script src="../low-latency/abr/dash.js"></script>
 
     <!--dash.all.min.js should be used in production over dash.all.debug.js
         Debug files are not compressed or obfuscated making the file size much larger compared with dash.all.min.js-->
@@ -530,8 +530,10 @@
             });
 
             video.addEventListener('waiting', (e) => {
+                const currentBuffer = player.getDashMetrics().getCurrentBufferLevel("video");
                 stallingAt = performance.now();
                 history.numStalls += 1;
+                console.log("Stall now with currentBuffer="+currentBuffer);
             });
 
             video.addEventListener('timeupdate', () => {

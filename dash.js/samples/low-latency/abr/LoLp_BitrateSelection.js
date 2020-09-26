@@ -278,7 +278,10 @@ class LearningAbrController {
         this.updateNeurons(currentNeuron,somElements,[throughputNormalized,latency,bufferSize,playbackRate,QoENormalized]);
 
         // special buffer case
-        if (currentBuffer<dynamicWeightsSelector.getMinBuffer()){
+        let downloadTime = (currentNeuron.bitrate * dynamicWeightsSelector.getSegmentDuration()) / currentThroughput;
+        if (currentBuffer<downloadTime+dynamicWeightsSelector.getMinBuffer()){
+            // will drop to below safe buffer, switch to minimum immediately
+            console.log("In order to avoid stall picking minimum index.")
             return this.minBitrateNeuron.qualityIndex;
         }
 

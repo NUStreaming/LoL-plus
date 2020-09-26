@@ -199,6 +199,10 @@ class DynamicWeightsSelector {
         return this.bufferMin;
     }
 
+    getSegmentDuration(){
+        return this.segmentDuration;
+    }
+
 }
 
 // Additional for run.js invocation of DynamicWeightsSelector
