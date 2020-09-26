@@ -144,6 +144,7 @@ class LearningAbrController {
         this.bitrateNormalizationFactor=1;
         this.latencyNormalizationFactor=100;
         this.minBitrate=0;
+        this.minBitrateNeuron=null;
         this.weights=null;
         this.sortedCenters=null;
     }
@@ -177,6 +178,9 @@ class LearningAbrController {
                     }
                 }
                 this.somBitrateNeurons.push(neuron);
+                if (neuron.bitrate==this.minBitrate){
+                    this.minBitrateNeuron=neuron;
+                }
             }
 
             this.sortedCenters=this.getInitialKmeansPlusPlusCenters(this.somBitrateNeurons);
@@ -273,6 +277,11 @@ class LearningAbrController {
         // will punish current if it is not picked
         this.updateNeurons(currentNeuron,somElements,[throughputNormalized,latency,bufferSize,playbackRate,QoENormalized]);
 
+        // special buffer case
+        if (currentBuffer<dynamicWeightsSelector.getMinBuffer()){
+            return this.minBitrateNeuron.qualityIndex;
+        }
+
         // Weight Selection //
 
         /*
@@ -315,7 +324,7 @@ class LearningAbrController {
         let minIndex=null;
         let winnerNeuron=null;
         let winnerWeights=null;
-
+        
         for (let i =0; i< somElements.length ; i++) {
             let somNeuron=somElements[i];
             let somNeuronState=somNeuron.state;

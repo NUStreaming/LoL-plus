@@ -195,6 +195,10 @@ class DynamicWeightsSelector {
             ** (1/2) // square root
     }
 
+    getMinBuffer(){
+        return this.bufferMin;
+    }
+
 }
 
 // Additional for run.js invocation of DynamicWeightsSelector
