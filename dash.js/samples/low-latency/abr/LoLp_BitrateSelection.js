@@ -348,8 +348,8 @@ class LearningAbrController {
             let somNeuron=somElements[i];
             let somNeuronState=somNeuron.state;
             let somData=[somNeuronState.throughput,
-                somNeuronState.latency,
-                somNeuronState.buffer,
+                Math.max(somNeuronState.latency,targetLatency),
+                Math.min(somNeuronState.buffer,targetBufferLevel),
                 somNeuronState.playbackRate,
                 somNeuronState.QoE];
 
