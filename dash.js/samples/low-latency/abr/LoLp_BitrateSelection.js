@@ -367,6 +367,8 @@ class LearningAbrController {
                 }
             }
 
+            // make it unsigned if it was multiplied with -1 in previous loop
+            this.weights[2]=Math.abs(this.weights[2]);
             if (somNeuronState.buffer>targetBufferLevel){
                 // higher than target buffer is a better thing to do
                 // if buffer is higher make the weight negative to get lower distance
