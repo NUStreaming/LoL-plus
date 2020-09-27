@@ -297,11 +297,14 @@ class LearningAbrController {
 
         // special buffer case
         let downloadTime = (currentNeuron.bitrate * dynamicWeightsSelector.getSegmentDuration()) / currentThroughput;
+        let isBufferLow=currentBuffer<downloadTime+dynamicWeightsSelector.getMinBuffer();
+        /*
         if (currentBuffer<downloadTime+dynamicWeightsSelector.getMinBuffer()){
             // will drop to below safe buffer, switch to minimum immediately
             console.log("In order to avoid stall downshifting")
             return this.getDownShiftNeuron(currentNeuron, currentThroughput).qualityIndex;
         }
+        */
 
         // Weight Selection //
 
@@ -356,7 +359,8 @@ class LearningAbrController {
                 somNeuronState.QoE];
 
             // special condition downshift immediately
-            if (somNeuron.bitrate>throughput-throughputDelta){
+            if (somNeuron.bitrate>throughput-throughputDelta || 
+                (somNeuron.bitrate>=currentNeuron.bitrate && isBufferLow)){
                 if (somNeuron.bitrate!=this.minBitrate){
                     // encourage to pick smaller bitrates throughputWeight=100
                     this.weights[0]=100;
