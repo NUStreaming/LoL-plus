@@ -286,7 +286,6 @@ class LearningAbrController {
         const targetPlaybackRate=1;
         // 10K + video encoding is the recommended throughput
         const throughputDelta=10000;
-        const minAllowedQoE=50;
         
         console.log("getNextQuality called throughput="+throughputNormalized+" latency="+latency+" bufferSize="+bufferSize," currentQualityIndex=",currentQualityIndex," playbackRate=",playbackRate," QoE=",QoE);
 
@@ -294,17 +293,6 @@ class LearningAbrController {
         // update current neuron and the neighbourhood with the calculated QoE
         // will punish current if it is not picked
         this.updateNeurons(currentNeuron,somElements,[throughputNormalized,latency,bufferSize,playbackRate,QoENormalized]);
-
-        // special buffer case
-        let downloadTime = (currentNeuron.bitrate * dynamicWeightsSelector.getSegmentDuration()) / currentThroughput;
-        let isBufferLow=currentBuffer<downloadTime+dynamicWeightsSelector.getMinBuffer();
-        /*
-        if (currentBuffer<downloadTime+dynamicWeightsSelector.getMinBuffer()){
-            // will drop to below safe buffer, switch to minimum immediately
-            console.log("In order to avoid stall downshifting")
-            return this.getDownShiftNeuron(currentNeuron, currentThroughput).qualityIndex;
-        }
-        */
 
         // Weight Selection //
 
@@ -358,9 +346,11 @@ class LearningAbrController {
                 somNeuronState.playbackRate,
                 somNeuronState.QoE];
 
+            // check buffer for possible stall in next round
+            let downloadTime = (somNeuron.bitrate * dynamicWeightsSelector.getSegmentDuration()) / currentThroughput;
+            let isBufferLow=currentBuffer<downloadTime+dynamicWeightsSelector.getMinBuffer();
             // special condition downshift immediately
-            if (somNeuron.bitrate>throughput-throughputDelta || 
-                (somNeuron.bitrate>=currentNeuron.bitrate && isBufferLow)){
+            if (somNeuron.bitrate>throughput-throughputDelta || isBufferLow){
                 if (somNeuron.bitrate!=this.minBitrate){
                     // encourage to pick smaller bitrates throughputWeight=100
                     this.weights[0]=100;
