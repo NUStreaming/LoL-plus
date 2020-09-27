@@ -296,12 +296,6 @@ class LearningAbrController {
         // will punish current if it is not picked
         this.updateNeurons(currentNeuron,somElements,[throughputNormalized,latency,rebuffer,playbackRate,QoENormalized]);
 
-        // check buffer for possible stall 
-        if (currentBuffer-downloadTime<dynamicWeightsSelector.getMinBuffer()){
-            console.log("Buffer is low for bitrate="+currentNeuron.bitrate+" downloadTime="+downloadTime+" currentBuffer="+currentBuffer+" rebuffer="+rebuffer);
-            return this.getDownShiftNeuron(currentNeuron,currentThroughput).qualityIndex;
-        }
-
         // Weight Selection //
 
         /*
@@ -355,8 +349,14 @@ class LearningAbrController {
                 somNeuronState.QoE];
             
             let distanceWeights=this.weights.slice();
+            downloadTime = (somNeuron.bitrate * dynamicWeightsSelector.getSegmentDuration()) / currentThroughput;
+            let nextBuffer = currentBuffer + this.segmentDuration - downloadTime;
+            let isBufferLow=nextBuffer<dynamicWeightsSelector.getMinBuffer();
+            if (isBufferLow){
+                console.log("Buffer is low for bitrate="+somNeuron.bitrate+" downloadTime="+downloadTime+" currentBuffer="+currentBuffer+" nextBuffer="+nextBuffer);
+            }
             // special condition downshift immediately
-            if (somNeuron.bitrate>throughput-throughputDelta){
+            if (somNeuron.bitrate>throughput-throughputDelta || isBufferLow){
                 if (somNeuron.bitrate!=this.minBitrate){
                     // encourage to pick smaller bitrates throughputWeight=100
                     distanceWeights[0]=100;
