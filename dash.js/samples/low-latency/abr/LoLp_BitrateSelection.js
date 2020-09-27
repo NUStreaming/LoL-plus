@@ -172,7 +172,7 @@ class LearningAbrController {
                         // normalize throughputs
                         throughput: bitrateList[i].bandwidth/this.bitrateNormalizationFactor,
                         latency: 0,
-                        buffer: 1,
+                        rebuffer: 0,
                         playbackRate: 1,
                         QoE: 1
                     }
@@ -217,8 +217,8 @@ class LearningAbrController {
     }
 
     getNeuronDistance(a, b) {
-        let aState=[a.state.throughput,a.state.latency, a.state.buffer, a.state.playbackRate, a.state.QoE];
-        let bState=[b.state.throughput,b.state.latency, b.state.buffer, b.state.playbackRate, b.state.QoE];
+        let aState=[a.state.throughput,a.state.latency, a.state.rebuffer, a.state.playbackRate, a.state.QoE];
+        let bState=[b.state.throughput,b.state.latency, b.state.rebuffer, b.state.playbackRate, b.state.QoE];
         return this.getDistance(aState,bState,[1,1,1,1,1]);
     }
 
@@ -235,14 +235,14 @@ class LearningAbrController {
     updateNeuronState(neuron, x, neighbourHood){
         let state=neuron.state;
         let w=[0.01, 0.01, 0.01, 0.01, 0.01]; // learning rate
-        // console.log("before update: neuron=",neuron.qualityIndex," throughput=",state.throughput," latency=",state.latency," buffer=",state.buffer)
+        // console.log("before update: neuron=",neuron.qualityIndex," throughput=",state.throughput," latency=",state.latency," rebuffer=",state.rebuffer)
         state.throughput=state.throughput+(x[0]-state.throughput)*w[0]*neighbourHood;
         state.latency=state.latency+(x[1]-state.latency)*w[1]*neighbourHood;
-        state.buffer=state.buffer+(x[2]-state.buffer)*w[2]*neighbourHood;
+        state.rebuffer=state.rebuffer+(x[2]-state.rebuffer)*w[2]*neighbourHood;
         state.playbackRate=state.playbackRate+(x[3]-state.playbackRate)*w[3]*neighbourHood;
         state.QoE=state.QoE+(x[4]-state.QoE)*w[4]*neighbourHood;
         console.log("after update: neuron=",neuron.qualityIndex,"throughput=",state.throughput,
-                    "latency=",state.latency," buffer=",state.buffer,
+                    "latency=",state.latency," rebuffer=",state.rebuffer,
                     "playbackRate=",state.playbackRate, "QoE=",state.QoE);
     }
 
@@ -281,18 +281,26 @@ class LearningAbrController {
         let QoENormalized =  (QoE<this.bitrateNormalizationFactor) ? QoE / this.bitrateNormalizationFactor : 1;
 
         const targetLatency=0;
-        const targetBufferLevel=1;
+        const targetRebufferLevel=0;
         const targetQoe=1;
         const targetPlaybackRate=1;
         // 10K + video encoding is the recommended throughput
         const throughputDelta=10000;
         
         console.log("getNextQuality called throughput="+throughputNormalized+" latency="+latency+" bufferSize="+bufferSize," currentQualityIndex=",currentQualityIndex," playbackRate=",playbackRate," QoE=",QoE);
-
+        
         let currentNeuron=somElements[currentQualityIndex];
+        let downloadTime = (currentNeuron.bitrate * dynamicWeightsSelector.getSegmentDuration()) / currentThroughput;
+        let rebuffer = Math.max(0, (downloadTime - currentBuffer));
         // update current neuron and the neighbourhood with the calculated QoE
         // will punish current if it is not picked
-        this.updateNeurons(currentNeuron,somElements,[throughputNormalized,latency,bufferSize,playbackRate,QoENormalized]);
+        this.updateNeurons(currentNeuron,somElements,[throughputNormalized,latency,rebuffer,playbackRate,QoENormalized]);
+
+        // check buffer for possible stall 
+        if (currentBuffer-downloadTime<dynamicWeightsSelector.getMinBuffer()){
+            console.log("Buffer is low for bitrate="+currentNeuron.bitrate+" downloadTime="+downloadTime+" currentBuffer="+currentBuffer+" rebuffer="+rebuffer);
+            return this.getDownShiftNeuron(currentNeuron,currentThroughput).qualityIndex;
+        }
 
         // Weight Selection //
 
@@ -324,7 +332,7 @@ class LearningAbrController {
         // Dynamic Weights Selector (step 2/2: find weights)
         let neurons = somElements;
         let weightVector = dynamicWeightsSelector.findWeightVector(neurons, currentLatency, currentBuffer, currentThroughput, playbackRate);
-        //let weightVector = dynamicWeightsSelector.findWeightVectorByDistance(neurons, [throughputNormalized,targetLatency,targetBufferLevel,targetPlaybackRate, targetQoe]);
+        //let weightVector = dynamicWeightsSelector.findWeightVectorByDistance(neurons, [throughputNormalized,targetLatency,targetRebufferLevel,targetPlaybackRate, targetQoe]);
         if (weightVector != null && weightVector != -1) {   // null: something went wrong, -1: constraints not met
             this.weights = weightVector;
         }
@@ -342,36 +350,26 @@ class LearningAbrController {
             let somNeuronState=somNeuron.state;
             let somData=[somNeuronState.throughput,
                 somNeuronState.latency,
-                somNeuronState.buffer,
+                somNeuronState.rebuffer,
                 somNeuronState.playbackRate,
                 somNeuronState.QoE];
-
-            // check buffer for possible stall in next round
-            let downloadTime = (somNeuron.bitrate * dynamicWeightsSelector.getSegmentDuration()) / currentThroughput;
-            let isBufferLow=currentBuffer<downloadTime+dynamicWeightsSelector.getMinBuffer();
+            
+            let distanceWeights=this.weights.slice();
             // special condition downshift immediately
-            if (somNeuron.bitrate>throughput-throughputDelta || isBufferLow){
+            if (somNeuron.bitrate>throughput-throughputDelta){
                 if (somNeuron.bitrate!=this.minBitrate){
                     // encourage to pick smaller bitrates throughputWeight=100
-                    this.weights[0]=100;
+                    distanceWeights[0]=100;
                 }
             }
 
-            // make it unsigned if it was multiplied with -1 in previous loop
-            this.weights[2]=Math.abs(this.weights[2]);
-            if (somNeuronState.buffer>targetBufferLevel){
-                // higher than target buffer is a better thing to do
-                // if buffer is higher make the weight negative to get lower distance
-                this.weights[2]=-1*this.weights[2];
-            }
-
             // calculate the distance with the target
-            let distance=this.getDistance(somData,[throughputNormalized,targetLatency,targetBufferLevel,targetPlaybackRate, targetQoe],this.weights);
+            let distance=this.getDistance(somData,[throughputNormalized,targetLatency,targetRebufferLevel,targetPlaybackRate, targetQoe],distanceWeights);
             if (minDistance==null || distance<minDistance){
                 minDistance=distance;
                 minIndex=somNeuron.qualityIndex;
                 winnerNeuron=somNeuron;
-                winnerWeights=this.weights;
+                winnerWeights=distanceWeights;
             }
             console.log("distance=",distance);
         }
@@ -380,7 +378,7 @@ class LearningAbrController {
         console.log('--- winnerWeights: ', winnerWeights);
 
         // update bmu and  neighnours with targetQoE=1, targetLatency=0
-        this.updateNeurons(winnerNeuron,somElements,[throughputNormalized,targetLatency,targetBufferLevel,targetPlaybackRate, targetQoe]);
+        this.updateNeurons(winnerNeuron,somElements,[throughputNormalized,targetLatency,targetRebufferLevel,targetPlaybackRate, targetQoe]);
 
         return minIndex;
     }

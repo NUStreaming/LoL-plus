@@ -69,6 +69,7 @@ class DynamicWeightsSelector {
 
                 let downloadTime = (neuron.bitrate * this.segmentDuration) / currentThroughput;
                 let rebuffer = Math.max(0, (downloadTime - currentBuffer));
+                let nextBuffer = currentBuffer + this.segmentDuration - downloadTime;
 
                 let wt;
                 if (weightsObj.latency == 0) wt = 10;
@@ -80,11 +81,13 @@ class DynamicWeightsSelector {
                 else wt = (1 / weightsObj.playbackRate);    // inverse the weight because wt and pbr should have positive relationship, i.e., higher pbr = higher wt
                 let weightedPlaybackRate = wt * neuron.state.playbackRate;
 
-                let totalQoE = this.qoeEvaluator.calculateSingleUseQoe(neuron.bitrate, rebuffer, weightedLatency, weightedPlaybackRate);
-                if ((maxQoE == null || totalQoE > maxQoE)){
-                    maxQoE = totalQoE;
-                    winnerWeights = weightVector;
-                    winnerBitrate = neuron.bitrate;
+                if (this.checkConstraints(weightedLatency,nextBuffer,rebuffer)){
+                    let totalQoE = this.qoeEvaluator.calculateSingleUseQoe(neuron.bitrate, rebuffer, weightedLatency, weightedPlaybackRate);
+                    if ((maxQoE == null || totalQoE > maxQoE)){
+                        maxQoE = totalQoE;
+                        winnerWeights = weightVector;
+                        winnerBitrate = neuron.bitrate;
+                    }
                 }
             });
         });
@@ -140,21 +143,25 @@ class DynamicWeightsSelector {
         return winnerWeights;
     }
 
-    checkConstraints(currentLatency, currentBuffer, currentThroughput, downloadTime) {
+    checkConstraints(nextLatency, nextBuffer, rebuffer) {
         // A1
-        if (currentLatency > this.targetLatency) {
+        // disabled till we find a better way of estimating latency
+        // fails for all with current value
+        /*
+        if (nextLatency > this.targetLatency) {
             // console.log('[DynamicWeightsSelector] Failed A1!');
             return false;
         }
+        */
 
         // A2
-        if (currentBuffer < this.bufferMin) {
+        if (nextBuffer < this.bufferMin) {
             // console.log('[DynamicWeightsSelector] Failed A2!');
             return false;
         }
 
         // A3
-        if (downloadTime > currentBuffer) {
+        if (rebuffer>0) {
             // console.log('[DynamicWeightsSelector] Failed A3!');
             return false;
         }
