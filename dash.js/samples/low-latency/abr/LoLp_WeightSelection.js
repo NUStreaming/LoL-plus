@@ -69,9 +69,13 @@ class DynamicWeightsSelector {
 
                 let downloadTime = (neuron.bitrate * this.segmentDuration) / currentThroughput;
                 let rebuffer = Math.max(0, (downloadTime - currentBuffer));
-                let nextBuffer = currentBuffer + this.segmentDuration - downloadTime;
+                let nextBuffer = this.getNextBuffer(currentBuffer, downloadTime);
 
                 let wt;
+                if (weightsObj.buffer == 0) wt = 10;
+                else wt = (1 / weightsObj.buffer)
+                let weightedRebuffer = wt * rebuffer;
+
                 if (weightsObj.latency == 0) wt = 10;
                 else wt = (1 / weightsObj.latency);         // inverse the weight because wt and latency should have positive relationship, i.e., higher latency = higher wt
                 let weightedLatency = wt * neuron.state.latency;
@@ -82,7 +86,7 @@ class DynamicWeightsSelector {
                 let weightedPlaybackRate = wt * neuron.state.playbackRate;
 
                 if (this.checkConstraints(weightedLatency,nextBuffer,rebuffer)){
-                    let totalQoE = this.qoeEvaluator.calculateSingleUseQoe(neuron.bitrate, rebuffer, weightedLatency, weightedPlaybackRate);
+                    let totalQoE = this.qoeEvaluator.calculateSingleUseQoe(neuron.bitrate, weightedRebuffer, weightedLatency, weightedPlaybackRate);
                     if ((maxQoE == null || totalQoE > maxQoE)){
                         maxQoE = totalQoE;
                         winnerWeights = weightVector;
@@ -208,6 +212,22 @@ class DynamicWeightsSelector {
 
     getSegmentDuration(){
         return this.segmentDuration;
+    }
+
+    getNextBufferWithBitrate(bitrateToDownload, currentBuffer, currentThroughput){
+        let downloadTime = (bitrateToDownload * this.segmentDuration) / currentThroughput;
+        return this.getNextBuffer(currentBuffer, downloadTime);
+    }
+
+    getNextBuffer(currentBuffer, downloadTime){
+        const segmentDuration= this.getSegmentDuration();
+        let nextBuffer;
+        if (downloadTime>segmentDuration){
+            nextBuffer = currentBuffer - segmentDuration;
+        } else {
+            nextBuffer = currentBuffer + segmentDuration - downloadTime;
+        }
+        return nextBuffer;
     }
 
 }

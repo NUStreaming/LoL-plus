@@ -349,8 +349,7 @@ class LearningAbrController {
                 somNeuronState.QoE];
             
             let distanceWeights=this.weights.slice();
-            downloadTime = (somNeuron.bitrate * dynamicWeightsSelector.getSegmentDuration()) / currentThroughput;
-            let nextBuffer = currentBuffer + dynamicWeightsSelector.getSegmentDuration() - downloadTime;
+            let nextBuffer=dynamicWeightsSelector.getNextBufferWithBitrate(somNeuron.bitrate, currentBuffer, currentThroughput);
             let isBufferLow=nextBuffer<dynamicWeightsSelector.getMinBuffer();
             if (isBufferLow){
                 console.log("Buffer is low for bitrate="+somNeuron.bitrate+" downloadTime="+downloadTime+" currentBuffer="+currentBuffer+" nextBuffer="+nextBuffer);
