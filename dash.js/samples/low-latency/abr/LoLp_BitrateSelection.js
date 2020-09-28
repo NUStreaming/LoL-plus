@@ -296,6 +296,12 @@ class LearningAbrController {
         // will punish current if it is not picked
         this.updateNeurons(currentNeuron,somElements,[throughputNormalized,latency,rebuffer,playbackRate,QoENormalized]);
 
+        // check buffer for possible stall 
+        if (currentBuffer-downloadTime<dynamicWeightsSelector.getMinBuffer()){
+            console.log("Buffer is low for bitrate="+currentNeuron.bitrate+" downloadTime="+downloadTime+" currentBuffer="+currentBuffer+" rebuffer="+rebuffer);
+            return this.getDownShiftNeuron(currentNeuron,currentThroughput).qualityIndex;
+        }
+
         // Weight Selection //
 
         /*

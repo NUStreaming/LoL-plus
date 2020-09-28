@@ -68,8 +68,8 @@ class DynamicWeightsSelector {
                 };
 
                 let downloadTime = (neuron.bitrate * this.segmentDuration) / currentThroughput;
-                let rebuffer = Math.max(0, (downloadTime - currentBuffer));
                 let nextBuffer = this.getNextBuffer(currentBuffer, downloadTime);
+                let rebuffer = Math.max(0.00001, (downloadTime - nextBuffer));
 
                 let wt;
                 if (weightsObj.buffer == 0) wt = 10;
@@ -85,13 +85,11 @@ class DynamicWeightsSelector {
                 else wt = (1 / weightsObj.playbackRate);    // inverse the weight because wt and pbr should have positive relationship, i.e., higher pbr = higher wt
                 let weightedPlaybackRate = wt * neuron.state.playbackRate;
 
-                if (this.checkConstraints(weightedLatency,nextBuffer,rebuffer)){
-                    let totalQoE = this.qoeEvaluator.calculateSingleUseQoe(neuron.bitrate, weightedRebuffer, weightedLatency, weightedPlaybackRate);
-                    if ((maxQoE == null || totalQoE > maxQoE)){
-                        maxQoE = totalQoE;
-                        winnerWeights = weightVector;
-                        winnerBitrate = neuron.bitrate;
-                    }
+                let totalQoE = this.qoeEvaluator.calculateSingleUseQoe(neuron.bitrate, weightedRebuffer, weightedLatency, weightedPlaybackRate);
+                if ((maxQoE == null || totalQoE > maxQoE)){
+                    maxQoE = totalQoE;
+                    winnerWeights = weightVector;
+                    winnerBitrate = neuron.bitrate;
                 }
             });
         });
