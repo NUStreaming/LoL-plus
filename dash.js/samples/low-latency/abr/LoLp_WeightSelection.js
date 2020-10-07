@@ -28,8 +28,12 @@ class DynamicWeightsSelector {
 
         // Generate all possible weight vectors
         let valueList = [0.2, 0.4, 0.6, 0.8, 1];
-        let weightTypeCount = 5;
+        let weightTypeCount = 4;
         this.weightOptions = this.getPermutations(valueList, weightTypeCount);
+
+        this.previousLatency=0;
+        this.previousBuffer=0;
+        this.previousRebuffer=0;
 
         // console.log(this.weightOptions.length); // e.g. 7776
     }
@@ -39,12 +43,16 @@ class DynamicWeightsSelector {
     // ABR to input current neurons and target state (only used in Method II)
     // to find the desired weight vector
     //
-    findWeightVector(neurons, currentLatency, currentBuffer, currentThroughput, currentPlaybackRate) {
+    findWeightVector(neurons, currentLatency, currentBuffer, currentRebuffer, currentThroughput, playbackRate) {
 
         // let minDistance = null; // the lower the better
         let maxQoE = null;      // the higher the better
         let winnerWeights = null;
         let winnerBitrate = null;
+
+        let deltaLatency=Math.abs(currentLatency-this.previousLatency)
+        let deltaBuffer=Math.abs(currentBuffer-this.previousBuffer)
+        let deltaRebuffer=Math.abs(currentBuffer-this.previousRebuffer)
 
         // For each neuron, m
         neurons.forEach((neuron) => {
@@ -63,8 +71,7 @@ class DynamicWeightsSelector {
                     throughput: weightVector[0],
                     latency: weightVector[1],
                     buffer: weightVector[2],
-                    playbackRate: weightVector[3],
-                    QoE: weightVector[4]
+                    switch: weightVector[3]
                 };
 
                 let downloadTime = (neuron.bitrate * this.segmentDuration) / currentThroughput;
@@ -81,12 +88,12 @@ class DynamicWeightsSelector {
                 let weightedLatency = wt * neuron.state.latency;
                 //let weightedLatency =  neuron.state.latency + ( neuron.state.latency - currentLatency ) * weightsObj.latency;
 
-                if (weightsObj.playbackRate == 0) wt = 10;
-                else wt = (1 / weightsObj.playbackRate);    // inverse the weight because wt and pbr should have positive relationship, i.e., higher pbr = higher wt
-                let weightedPlaybackRate = wt * neuron.state.playbackRate;
+                if (weightsObj.switch == 0) wt = 10;
+                else wt = (1 / weightsObj.switch);    // inverse the weight because wt and pbr should have positive relationship, i.e., higher pbr = higher wt
+                let weightedSwitch = wt * neuron.state.switch;
 
-                let totalQoE = this.qoeEvaluator.calculateSingleUseQoe(neuron.bitrate, weightedRebuffer, weightedLatency, weightedPlaybackRate);
-                if ((maxQoE == null || totalQoE > maxQoE)){
+                let totalQoE = this.qoeEvaluator.calculateSingleUseQoe(neuron.bitrate, weightedRebuffer, weightedLatency, playbackRate);
+                if ((maxQoE == null || totalQoE > maxQoE) && this.checkConstraints(currentLatency, nextBuffer, rebuffer, deltaLatency, deltaBuffer, deltaRebuffer)){
                     maxQoE = totalQoE;
                     winnerWeights = weightVector;
                     winnerBitrate = neuron.bitrate;
@@ -99,71 +106,31 @@ class DynamicWeightsSelector {
             winnerWeights = -1;
         }
 
+        this.previousLatency=currentLatency;
+        this.previousBuffer=currentBuffer;
+        this.previousRebuffer=currentRebuffer;
         return winnerWeights;
     }
 
-    findWeightVectorByDistance(neurons, targetState) {
-
-        let minDistance = null; // the lower the better
-        let winnerWeights = null;
-        let winnerBitrate = null;
-
-        // For each neuron, m
-        neurons.forEach((neuron) => {
-
-            // For each possible weight vector, z
-            // E.g. For [ throughput, latency, buffer, playbackRate, QoE ]
-            //      Possible weightVector = [ 0.2, 0.4, 0.2, 0, 0.2 ]
-            this.weightOptions.forEach((weightVector) => {
-
-                if (neuron.state.throughput>targetState[0]){
-                    // measured throughput is not enough for this neuron
-                    return;
-                }
-
-                let somNeuronData=[neuron.state.throughput,
-                    neuron.state.latency,
-                    neuron.state.buffer,
-                    neuron.state.playbackRate,
-                    neuron.state.QoE];
-
-                let distance = this.getDistance(somNeuronData, targetState, weightVector);
-
-                if (minDistance == null || distance < minDistance){
-                    minDistance = distance;
-                    winnerWeights = weightVector;
-                    winnerBitrate = neuron.bitrate;
-                }
-                
-            });
-        });
-
-        if (winnerWeights == null && winnerBitrate == null) {
-            winnerWeights = -1;
-        }
-
-        return winnerWeights;
-    }
-
-    checkConstraints(nextLatency, nextBuffer, rebuffer) {
+    checkConstraints(nextLatency, nextBuffer, rebuffer, deltaLatency, deltaBuffer, deltaRebuffer) {
         // A1
         // disabled till we find a better way of estimating latency
         // fails for all with current value
-        /*
-        if (nextLatency > this.targetLatency) {
+        
+        if (nextLatency > this.targetLatency + deltaLatency) {
             // console.log('[DynamicWeightsSelector] Failed A1!');
             return false;
         }
-        */
 
         // A2
-        if (nextBuffer < this.bufferMin) {
+
+        if (nextBuffer < this.bufferMin - deltaBuffer) {
             // console.log('[DynamicWeightsSelector] Failed A2!');
             return false;
         }
 
         // A3
-        if (rebuffer>0) {
+        if (rebuffer>deltaRebuffer) {
             // console.log('[DynamicWeightsSelector] Failed A3!');
             return false;
         }
