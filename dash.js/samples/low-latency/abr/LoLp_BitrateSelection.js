@@ -352,7 +352,7 @@ class LearningAbrController {
                     // encourage to pick smaller bitrates throughputWeight=100
                     distanceWeights[0]=100;
                 }
-            }
+            }            
 
             // calculate the distance with the target
             let distance=this.getDistance(somData,[throughputNormalized,targetLatency,targetRebufferLevel,targetSwitch],distanceWeights);
@@ -374,7 +374,7 @@ class LearningAbrController {
         console.log('--- winnerWeights: ', winnerWeights);
 
         // update bmu and  neighnours with targetQoE=1, targetLatency=0
-        this.updateNeurons(winnerNeuron,somElements,[throughputNormalized,targetLatency,targetRebufferLevel,targetSwitch]);
+        this.updateNeurons(winnerNeuron,somElements,[throughputNormalized,targetLatency,targetRebufferLevel,bitrateSwitch]);
 
         return minIndex;
     }
