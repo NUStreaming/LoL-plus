@@ -1,5 +1,5 @@
 # NOTE
-LoL^+ will be integrated with [dash.js referance player v.3.2.0](https://github.com/Dash-Industry-Forum/dash.js)  
+LoL^+ will be integrated with [dash.js referance player v.3.2.0](https://github.com/Dash-Industry-Forum/dash.js) and due to the code base difference, there can be some differences in terms of performance. Under investigation. 
 
 # Assets for LoL^+
 
