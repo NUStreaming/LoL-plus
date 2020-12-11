@@ -275,12 +275,21 @@ function FetchLoader(cfg) {
 		datumE = datumE.filter(dataE => dataE.id !== 1);
 		datumE = datumE.filter((dataE,i) => i < datumE.length-1);
 		// Compute the download time of a segment based on the filtered data [last chunk end time - first chunk beginning time]
-		if (datum.length > 1) {
-			let SegDownlaodtime = datumE[datumE.length - 1].tse - datum[0].ts; 
-			// Send SegDownlaodtime to ThroughputHistory.js for SWMA based throughout measurements
-			return SegDownlaodtime;
-		}	
-        return null;
+		 let segDownloadTime = 0;
+            if (datum.length > 1) {
+                for (let i = 0; i < datum.length; i++) {
+                    if (datum[i] && datumE[i]) {
+                        let chunkDownladTime = datumE[i].ts - datum[i].ts;
+                        segDownloadTime += chunkDownladTime;
+                    }
+                }
+
+                return segDownloadTime;
+            }
+            return null;
+        } catch (e) {
+            return null;
+        }
     }
 
     instance = {
