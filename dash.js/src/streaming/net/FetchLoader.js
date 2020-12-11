@@ -279,7 +279,7 @@ function FetchLoader(cfg) {
             if (datum.length > 1) {
                 for (let i = 0; i < datum.length; i++) {
                     if (datum[i] && datumE[i]) {
-                        let chunkDownladTime = datumE[i].ts - datum[i].ts;
+                        let chunkDownladTime = datumE[i].tse - datum[i].ts;
                         segDownloadTime += chunkDownladTime;
                     }
                 }
