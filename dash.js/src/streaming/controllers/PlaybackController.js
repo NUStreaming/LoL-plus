@@ -709,11 +709,13 @@ function PlaybackController() {
     function startPlaybackCatchUp() {
         if (videoModel) {
             let results;
+            const currentLiveLatency = getCurrentLiveLatency();
+            const liveDelay = mediaPlayerModel.getLiveDelay();
             // Custom playback control: Based on buffer level
             if (settings.get().streaming.playbackBufferMin && settings.get().streaming.playbackBufferMax) {
                 results = calculateNewPlaybackRateCustom(
                         settings.get().streaming.liveCatchUpPlaybackRate,
-                        getCurrentLiveLatency(), mediaPlayerModel.getLiveDelay(),
+                        currentLiveLatency, liveDelay,
                         settings.get().streaming.liveCatchUpMinDrift,
                         settings.get().streaming.playbackBufferMin, settings.get().streaming.playbackBufferMax,
                         playbackStalled, getBufferLevel(), videoModel.getPlaybackRate());
@@ -721,7 +723,7 @@ function PlaybackController() {
                 // Default playback control: Based on target and current latency
                 results = calculateNewPlaybackRate(
                     settings.get().streaming.liveCatchUpPlaybackRate,
-                    getCurrentLiveLatency(), mediaPlayerModel.getLiveDelay(),
+                    currentLiveLatency, liveDelay,
                     playbackStalled, getBufferLevel(), videoModel.getPlaybackRate());
             }
 
@@ -734,6 +736,7 @@ function PlaybackController() {
                 videoModel.setPlaybackRate(newRate);
             }
 
+            const deltaLatency = currentLiveLatency - liveDelay;
             // Note: This part is excluded from the estimation of future playback rate
             if (settings.get().streaming.liveCatchUpMaxDrift > 0 && !isLowLatencySeekingInProgress &&
                 deltaLatency > settings.get().streaming.liveCatchUpMaxDrift) {

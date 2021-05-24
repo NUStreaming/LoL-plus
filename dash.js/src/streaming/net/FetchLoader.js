@@ -170,7 +170,7 @@ function FetchLoader(cfg) {
 							if (Flag1.found) { 
 									// Store the beginning time of each chunk download in array StartTimeData
 									StartTimeData.push({
-										ts: performance.now(),
+										ts: performance.now(), /* jshint ignore:line */
 										bytes: value.length,
 										id: Count
 									});
@@ -181,7 +181,7 @@ function FetchLoader(cfg) {
                         const end = Flag2.lastCompletedOffset + Flag2.size;
 						// Store the end time of each chunk download  with its size in array EndTimeData
 						EndTimeData.push({
-									tse: performance.now(),
+									tse: performance.now(), /* jshint ignore:line */
 									bytes: remaining.length,
 								    id: Count 
 							});
@@ -269,13 +269,14 @@ function FetchLoader(cfg) {
 	
 	// Compute the download time of a segment 
     function calculateDownloadedTime(datum, datumE, bytesReceived) {
-		// Filter the first and last chunks in a segment in both arrays [StartTimeData and EndTimeData]	
-		datum = datum.filter(data => data.id !== 1);
-	    datum = datum.filter((data,i) => i < datum.length-1);
-		datumE = datumE.filter(dataE => dataE.id !== 1);
-		datumE = datumE.filter((dataE,i) => i < datumE.length-1);
-		// Compute the download time of a segment based on the filtered data [last chunk end time - first chunk beginning time]
-		 let segDownloadTime = 0;
+        try {
+            // Filter the first and last chunks in a segment in both arrays [StartTimeData and EndTimeData]	
+            datum = datum.filter(data => data.id !== 1);
+            datum = datum.filter((data,i) => i < datum.length-1);
+            datumE = datumE.filter(dataE => dataE.id !== 1);
+            datumE = datumE.filter((dataE,i) => i < datumE.length-1);
+            // Compute the download time of a segment based on the filtered data [last chunk end time - first chunk beginning time]
+		    let segDownloadTime = 0;
             if (datum.length > 1) {
                 for (let i = 0; i < datum.length; i++) {
                     if (datum[i] && datumE[i]) {
