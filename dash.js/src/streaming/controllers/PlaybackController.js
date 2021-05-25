@@ -751,6 +751,7 @@ function PlaybackController() {
 
     // Addition to allow ABR to estimate future playback rate
     function calculateNewPlaybackRate(liveCatchUpPlaybackRate, currentLiveLatency, liveDelay, pStalled, bufferLevel, currentPlaybackRate) {
+        //jscs:disable
         // if (videoModel) {
             // const cpr = settings.get().streaming.liveCatchUpPlaybackRate;
             // const liveDelay = mediaPlayerModel.getLiveDelay();
@@ -788,8 +789,9 @@ function PlaybackController() {
             return {
                 pStalled: pStalled,
                 newRate: newRate
-            }
+            };
         // }
+        //jscs:enable
     }
 
     // Addition to allow ABR to estimate future playback rate
@@ -853,7 +855,7 @@ function PlaybackController() {
         return {
             pStalled: pStalled,
             newRate: newRate
-        }
+        };
     }
 
     function stopPlaybackCatchUp() {

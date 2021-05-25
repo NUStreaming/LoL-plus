@@ -51,7 +51,6 @@ function FetchLoader(cfg) {
     const requestModifier = cfg.requestModifier;
     const boxParser = cfg.boxParser;
     let instance;
-    let previousT = 0;
     let Count = 1;
 
     function load(httpRequest) {
@@ -137,21 +136,21 @@ function FetchLoader(cfg) {
             let offset = 0;
 
             httpRequest.reader = response.body.getReader();
-			let StartTimeData = [];
-			let EndTimeData = [];
+            let StartTimeData = [];
+            let EndTimeData = [];
 
             const processResult = function ({ value, done }) { // Bug fix Parse whenever data is coming [value] better than 1ms looking that increase CPU
-                if (done) { 
-                    if (remaining) { 
+                if (done) {
+                    if (remaining) {
                         // If there is pending data, call progress so network metrics
                         // are correctly generated
                         // Same structure as https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequestEventTarget/
-						Count = 1;
+                        Count = 1;
                         httpRequest.progress({
                             loaded: bytesReceived,
                             total: isNaN(totalBytes) ? bytesReceived : totalBytes,
                             lengthComputable: true,
-                            time: calculateDownloadedTime(StartTimeData, EndTimeData, bytesReceived),
+                            time: calculateDownloadedTime(StartTimeData, EndTimeData),
                             stream: true
                         });
 
@@ -162,29 +161,29 @@ function FetchLoader(cfg) {
                     return;
                 }
 
-                if (value && value.length > 0 ) { 
-                    remaining = concatTypedArray(remaining, value);	 		
+                if (value && value.length > 0 ) {
+                    remaining = concatTypedArray(remaining, value);
                     bytesReceived += value.length;
-					// Parse the payload and capture the the 'moof' box
-					const Flag1 = boxParser.ParsePayload(['moof'], remaining, offset);  
-							if (Flag1.found) { 
-									// Store the beginning time of each chunk download in array StartTimeData
-									StartTimeData.push({
-										ts: performance.now(), /* jshint ignore:line */
-										bytes: value.length,
-										id: Count
-									});
-							}	
-					Count = Count + 1;	
+                    // Parse the payload and capture the the 'moof' box
+                    const Flag1 = boxParser.ParsePayload(['moof'], remaining, offset);
+                    if (Flag1.found) {
+                        // Store the beginning time of each chunk download in array StartTimeData
+                        StartTimeData.push({
+                            ts: performance.now(), /* jshint ignore:line */
+                            bytes: value.length,
+                            id: Count
+                        });
+                    }
+                    Count = Count + 1;
                     const Flag2 = boxParser.findLastTopIsoBoxCompleted(['moov', 'mdat'], remaining, offset);
                     if (Flag2.found) {
                         const end = Flag2.lastCompletedOffset + Flag2.size;
-						// Store the end time of each chunk download  with its size in array EndTimeData
-						EndTimeData.push({
-									tse: performance.now(), /* jshint ignore:line */
-									bytes: remaining.length,
-								    id: Count 
-							});
+                        // Store the end time of each chunk download  with its size in array EndTimeData
+                        EndTimeData.push({
+                            tse: performance.now(), /* jshint ignore:line */
+                            bytes: remaining.length,
+                            id: Count
+                        });
 
                         // If we are going to pass full buffer, avoid copying it and pass
                         // complete buffer. Otherwise clone the part of the buffer that is completed
@@ -197,7 +196,7 @@ function FetchLoader(cfg) {
                         } else {
                             data = new Uint8Array(remaining.subarray(0, end));
                             remaining = remaining.subarray(end);
-                        }	
+                        }
                         // Announce progress but don't track traces. Throughput measures are quite unstable
                         // when they are based in small amount of data
                         httpRequest.progress({
@@ -205,7 +204,7 @@ function FetchLoader(cfg) {
                             lengthComputable: false,
                             noTrace: true
                         });
-			
+
                         offset = 0;
                     } else {
                         offset = Flag2.lastCompletedOffset;
@@ -221,7 +220,7 @@ function FetchLoader(cfg) {
                     }
                 }
                 read(httpRequest, processResult);
-            };	
+            };
             read(httpRequest, processResult);
         })
         .catch( function (e) {
@@ -266,17 +265,17 @@ function FetchLoader(cfg) {
             }
         }
     }
-	
-	// Compute the download time of a segment 
-    function calculateDownloadedTime(datum, datumE, bytesReceived) {
+
+    // Compute the download time of a segment
+    function calculateDownloadedTime(datum, datumE) {
         try {
-            // Filter the first and last chunks in a segment in both arrays [StartTimeData and EndTimeData]	
+            // Filter the first and last chunks in a segment in both arrays [StartTimeData and EndTimeData]
             datum = datum.filter(data => data.id !== 1);
-            datum = datum.filter((data,i) => i < datum.length-1);
+            datum = datum.filter((data,i) => i < datum.length - 1);
             datumE = datumE.filter(dataE => dataE.id !== 1);
-            datumE = datumE.filter((dataE,i) => i < datumE.length-1);
+            datumE = datumE.filter((dataE,i) => i < datumE.length - 1);
             // Compute the download time of a segment based on the filtered data [last chunk end time - first chunk beginning time]
-		    let segDownloadTime = 0;
+            let segDownloadTime = 0;
             if (datum.length > 1) {
                 for (let i = 0; i < datum.length; i++) {
                     if (datum[i] && datumE[i]) {
