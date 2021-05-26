@@ -276,10 +276,10 @@ function FetchLoader(cfg) {
             datumE = datumE.filter((dataE,i) => i < datumE.length - 1);
             // Compute the download time of a segment based on the filtered data [last chunk end time - first chunk beginning time]
             if (datum.length > 1) {
-				let SegDownlaodtime = datumE[datumE.length - 1].tse - datum[0].ts; 
-				return SegDownlaodtime;
-			}
-			return null;
+                let SegDownlaodtime = datumE[datumE.length - 1].tse - datum[0].ts;
+                return SegDownlaodtime;
+            }
+            return null;
         } catch (e) {
             return null;
         }
