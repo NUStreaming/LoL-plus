@@ -275,18 +275,11 @@ function FetchLoader(cfg) {
             datumE = datumE.filter(dataE => dataE.id !== 1);
             datumE = datumE.filter((dataE,i) => i < datumE.length - 1);
             // Compute the download time of a segment based on the filtered data [last chunk end time - first chunk beginning time]
-            let segDownloadTime = 0;
             if (datum.length > 1) {
-                for (let i = 0; i < datum.length; i++) {
-                    if (datum[i] && datumE[i]) {
-                        let chunkDownladTime = datumE[i].tse - datum[i].ts;
-                        segDownloadTime += chunkDownladTime;
-                    }
-                }
-
-                return segDownloadTime;
-            }
-            return null;
+				let SegDownlaodtime = datumE[datumE.length - 1].tse - datum[0].ts; 
+				return SegDownlaodtime;
+			}
+			return null;
         } catch (e) {
             return null;
         }
@@ -305,4 +298,3 @@ FetchLoader.__dashjs_factory_name = 'FetchLoader';
 
 const factory = FactoryMaker.getClassFactory(FetchLoader);
 export default factory;
-
