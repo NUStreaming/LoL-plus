@@ -98,7 +98,7 @@ function BoxParser(/*config*/) {
         while (offset < data.byteLength) {
             const boxSize = parseUint32(data, offset);
             const boxType = parseIsoBoxType(data, offset + 4);
-	    //console.log('boxType', boxType);
+            //console.log('boxType', boxType);
             if (boxSize === 0) {
                 break;
             }
@@ -258,9 +258,9 @@ function BoxParser(/*config*/) {
 
         return initRange;
     }
-	
-	// Real-time parsing (whenever data is loaded in the buffer payload) of the payload to capture the moof of a chunk
-	function ParsePayload(types, buffer, offset) {
+
+    // Real-time parsing (whenever data is loaded in the buffer payload) of the payload to capture the moof of a chunk
+    function ParsePayload(types, buffer, offset) {
         if (offset === undefined) {
             offset = 0;
         }
@@ -304,7 +304,7 @@ function BoxParser(/*config*/) {
         getMediaTimescaleFromMoov: getMediaTimescaleFromMoov,
         getSamplesInfo: getSamplesInfo,
         findInitRange: findInitRange,
-		ParsePayload: ParsePayload
+        ParsePayload: ParsePayload
     };
 
     setup();

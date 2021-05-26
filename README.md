@@ -1,9 +1,12 @@
-# Assets for LoL^+
+# NOTE
+LoL+ is integrated with [dash.js referance player v.3.2.0](https://github.com/Dash-Industry-Forum/dash.js) and due to the code base difference, there can be some differences in terms of performance. Under investigation. 
 
-This repo contains assets for LoL^+ based on Twitch's ACM MMSys 2020 Grand Challenge, [Adaptation Algorithm for Near-Second Latency](https://2020.acmmmsys.org/lll_challenge.php). It contains everything you need to build and test low-latency ABR algorithms locally.
+# Assets for LoL+
+
+This repo contains assets for LoL+ based on Twitch's ACM MMSys 2020 Grand Challenge, [Adaptation Algorithm for Near-Second Latency](https://2020.acmmmsys.org/lll_challenge.php). It contains everything you need to build and test low-latency ABR algorithms locally.
 
 # Cite These Papers
-- Bentaleb, A.,  Akcay, M. N., Lim, M., Begen, A. C., & Zimmermann, R. (2020, Sept). Catching the Moment with LoL^+ in Twitch-LikeLow-Latency Live Streaming Platforms (to appear).
+- Bentaleb, A.,  Akcay, M. N., Lim, M., Begen, A. C., & Zimmermann, R. Catching the Moment with LoL+ in Twitch-Like Low-Latency Live Streaming Platforms (to appear in IEEE Trans. Multimedia - [pdf](http://dx.doi.org/10.1109/TMM.2021.3079288)).
 - Lim, M., Akcay, M. N., Bentaleb, A., Begen, A. C., & Zimmermann, R. (2020, May). When they go high, we go low: low-latency live streaming in dash. js with LoL. In Proceedings of the 11th ACM Multimedia Systems Conference (pp. 321-326).
 
 

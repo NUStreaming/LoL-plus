@@ -32,8 +32,6 @@ class DynamicWeightsSelector {
         this.weightOptions = this.getPermutations(valueList, weightTypeCount);
 
         this.previousLatency=0;
-        this.previousBuffer=0;
-        this.previousRebuffer=0;
 
         // console.log(this.weightOptions.length); // e.g. 7776
     }
@@ -51,8 +49,6 @@ class DynamicWeightsSelector {
         let winnerBitrate = null;
 
         let deltaLatency=Math.abs(currentLatency-this.previousLatency)
-        let deltaBuffer=Math.abs(currentBuffer-this.previousBuffer)
-        let deltaRebuffer=Math.abs(currentBuffer-this.previousRebuffer)
 
         // For each neuron, m
         neurons.forEach((neuron) => {
@@ -93,7 +89,7 @@ class DynamicWeightsSelector {
                 let weightedSwitch = wt * neuron.state.switch;
 
                 let totalQoE = this.qoeEvaluator.calculateSingleUseQoe(neuron.bitrate, weightedRebuffer, weightedLatency, playbackRate);
-                if ((maxQoE == null || totalQoE > maxQoE) && this.checkConstraints(currentLatency, nextBuffer, rebuffer, deltaLatency, deltaBuffer, deltaRebuffer)){
+                if ((maxQoE == null || totalQoE > maxQoE) && this.checkConstraints(currentLatency, nextBuffer, deltaLatency)){
                     maxQoE = totalQoE;
                     winnerWeights = weightVector;
                     winnerBitrate = neuron.bitrate;
@@ -107,12 +103,10 @@ class DynamicWeightsSelector {
         }
 
         this.previousLatency=currentLatency;
-        this.previousBuffer=currentBuffer;
-        this.previousRebuffer=currentRebuffer;
         return winnerWeights;
     }
 
-    checkConstraints(nextLatency, nextBuffer, rebuffer, deltaLatency, deltaBuffer, deltaRebuffer) {
+    checkConstraints(nextLatency, nextBuffer, deltaLatency) {
         // A1
         // disabled till we find a better way of estimating latency
         // fails for all with current value
@@ -123,15 +117,8 @@ class DynamicWeightsSelector {
         }
 
         // A2
-
-        if (nextBuffer < this.bufferMin - deltaBuffer) {
+        if (nextBuffer < this.bufferMin) {
             // console.log('[DynamicWeightsSelector] Failed A2!');
-            return false;
-        }
-
-        // A3
-        if (rebuffer>deltaRebuffer) {
-            // console.log('[DynamicWeightsSelector] Failed A3!');
             return false;
         }
         
