@@ -95,7 +95,7 @@ function TgcLearningRuleClass() {
         qoeEvaluator.logSegmentMetrics(currentBitrateKbps, segmentRebufferTime, latency, playbackRate);
         let currentQoeInfo = qoeEvaluator.getPerSegmentQoe();
         let currentTotalQoe = currentQoeInfo.totalQoe;
-        console.log("QoE: ",currentTotalQoe);
+        // console.log("QoE: ",currentTotalQoe);
 
 
         /*
@@ -162,7 +162,7 @@ class LearningAbrController {
                 }
             });
             this.bitrateNormalizationFactor=this.getMagnitude(bitrateVector);
-            console.log("throughput normalization factor is "+this.bitrateNormalizationFactor);
+            // console.log("throughput normalization factor is "+this.bitrateNormalizationFactor);
             
             for (let i = 0; i < bitrateList.length; i++) {
                 let neuron={
@@ -239,9 +239,9 @@ class LearningAbrController {
         state.latency=state.latency+(x[1]-state.latency)*w[1]*neighbourHood;
         state.rebuffer=state.rebuffer+(x[2]-state.rebuffer)*w[2]*neighbourHood;
         state.switch=state.switch+(x[3]-state.switch)*w[3]*neighbourHood;
-        console.log("after update: neuron=",neuron.qualityIndex,"throughput=",state.throughput,
-                    "latency=",state.latency," rebuffer=",state.rebuffer,
-                    "switch=",state.switch);
+        // console.log("after update: neuron=",neuron.qualityIndex,"throughput=",state.throughput,
+                    // "latency=",state.latency," rebuffer=",state.rebuffer,
+                    // "switch=",state.switch);
     }
 
     getDownShiftNeuron(currentNeuron, currentThroughput){
@@ -362,7 +362,7 @@ class LearningAbrController {
                 winnerNeuron=somNeuron;
                 winnerWeights=distanceWeights;
             }
-            console.log("distance=",distance);
+            // console.log("distance=",distance);
         }
 
         // update current neuron and the neighbourhood with the calculated QoE
@@ -370,8 +370,8 @@ class LearningAbrController {
         let bitrateSwitch = Math.abs(currentNeuron.bitrate - winnerNeuron.bitrate) / this.bitrateNormalizationFactor;
         this.updateNeurons(currentNeuron,somElements,[throughputNormalized,latency,rebuffer,bitrateSwitch]);
 
-        console.log('--- minDistance: ', minDistance);
-        console.log('--- winnerWeights: ', winnerWeights);
+        // console.log('--- minDistance: ', minDistance);
+        // console.log('--- winnerWeights: ', winnerWeights);
 
         // update bmu and  neighnours with targetQoE=1, targetLatency=0
         this.updateNeurons(winnerNeuron,somElements,[throughputNormalized,targetLatency,targetRebufferLevel,bitrateSwitch]);
@@ -386,7 +386,7 @@ class LearningAbrController {
             for(let i=0;i<weightCount;i++){
                 W.push(Math.random() * upperBound);
             }
-            console.log("Xavier Weights=",W);
+            // console.log("Xavier Weights=",W);
             this.weights=W;
         // }
         return this.weights;    
@@ -464,7 +464,7 @@ class LearningAbrController {
             centers.splice(minIndex,1);
         }
 
-        console.log("sortedCenters=",sortedCenters);
+        // console.log("sortedCenters=",sortedCenters);
         return sortedCenters;
     }
 }
