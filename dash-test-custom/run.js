@@ -241,7 +241,8 @@ sleep(waitSeconds * 1000).then(() => {
     //test mode setuser agent to puppeteer
     page.setUserAgent("puppeteer");
 
-    await page.goto("http://localhost:3000/samples/low-latency/lolp_index.html");
+    // await page.goto("http://localhost:3000/samples/low-latency/index.html");
+    await page.goto("http://localhost:3000/samples/low-latency/LoLp_index.html");
     const cdpClient = await page.target().createCDPSession();
 
     console.log("Waiting for player to setup.");
