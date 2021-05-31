@@ -97,7 +97,7 @@ function ThroughputHistory(config) {
         let throughput;
         const throughputCalculatedByChunkFiltering = httpRequest.segmentThroughput;
         if (throughputCalculatedByChunkFiltering && throughputCalculatedByChunkFiltering !== null) {
-            throughput = throughputCalculatedByChunkFiltering;
+            throughput = Math.round(throughputCalculatedByChunkFiltering);
         } else {
             throughput = Math.round((8 * downloadBytes) / throughputMeasureTime); // bits/ms = kbits/s
         }

@@ -303,7 +303,7 @@ function FetchLoader(cfg) {
                     if (datum[i] && datumE[i]) {
                         let chunkDownloadTime = datumE[i].tse - datum[i].ts;
                         if (chunkDownloadTime > 1) {
-                            chunkThroughputs[i] = datumE[i].bytes / chunkDownloadTime;
+                            chunkThroughputs[i] = (8 * datumE[i].bytes) / chunkDownloadTime;
                         }
                     }
                 }
