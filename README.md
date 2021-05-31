@@ -1,6 +1,8 @@
 # NOTE
 LoL+ is integrated with [dash.js referance player v.3.2.0](https://github.com/Dash-Industry-Forum/dash.js) and due to the code base difference, there can be some differences in terms of performance. Under investigation. 
 
+All the ABR rules in this repository would be using our LoL+ bandwidth measurement module. If you wish to test with the default dash.js bandwidth measurement module, please use the original dash.js file provided in the official dash.js repository.
+
 # Assets for LoL+
 
 This repo contains assets for LoL+ based on Twitch's ACM MMSys 2020 Grand Challenge, [Adaptation Algorithm for Near-Second Latency](https://2020.acmmmsys.org/lll_challenge.php). It contains everything you need to build and test low-latency ABR algorithms locally.
