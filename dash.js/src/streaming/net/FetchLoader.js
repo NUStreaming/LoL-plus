@@ -154,6 +154,7 @@ function FetchLoader(cfg) {
                             stream: true
                         });
 
+                        httpRequest.segmentThroughput = calculateThroughputByChunkData(StartTimeData, EndTimeData);
                         httpRequest.response.response = remaining.buffer;
                     }
                     httpRequest.onload();
@@ -267,23 +268,61 @@ function FetchLoader(cfg) {
     }
 
     // Compute the download time of a segment
-    function calculateDownloadedTime(datum, datumE) {
+    function calculateDownloadedTime(downloadedData, bytesReceived) {
         try {
-            // Filter the first and last chunks in a segment in both arrays [StartTimeData and EndTimeData]
-            datum = datum.filter(data => data.id !== 1);
-            datum = datum.filter((data,i) => i < datum.length - 1);
-            datumE = datumE.filter(dataE => dataE.id !== 1);
-            datumE = datumE.filter((dataE,i) => i < datumE.length - 1);
-            // Compute the download time of a segment based on the filtered data [last chunk end time - first chunk beginning time]
-            if (datum.length > 1) {
-                let SegDownlaodtime = datumE[datumE.length - 1].tse - datum[0].ts;
-                return SegDownlaodtime;
+            downloadedData = downloadedData.filter(data => data.bytes > ((bytesReceived / 4) / downloadedData.length));
+            if (downloadedData.length > 1) {
+                let time = 0;
+                const avgTimeDistance = (downloadedData[downloadedData.length - 1].ts - downloadedData[0].ts) / downloadedData.length;
+                downloadedData.forEach((data, index) => {
+                    // To be counted the data has to be over a threshold
+                    const next = downloadedData[index + 1];
+                    if (next) {
+                        const distance = next.ts - data.ts;
+                        time += distance < avgTimeDistance ? distance : 0;
+                    }
+                });
+                return time;
             }
             return null;
         } catch (e) {
             return null;
         }
     }
+
+    function calculateThroughputByChunkData(startTimeData, endTimeData) {
+        try {
+            let datum, datumE;
+            // Filter the first and last chunks in a segment in both arrays [StartTimeData and EndTimeData]
+            datum = startTimeData.filter((data, i) => i > 0 && i < startTimeData.length - 1);
+            datumE = endTimeData.filter((dataE, i) => i > 0 && i < endTimeData.length - 1);
+            let chunkThroughputs = [];
+            // Compute the average throughput of the filtered chunk data
+            if (datum.length > 1) {
+                for (let i = 0; i < datum.length; i++) {
+                    if (datum[i] && datumE[i]) {
+                        let chunkDownloadTime = datumE[i].tse - datum[i].ts;
+                        if (chunkDownloadTime > 1) {
+                            chunkThroughputs[i] = datumE[i].bytes / chunkDownloadTime;
+                        }
+                    }
+                }
+
+                let sumOfChunkThroughputs = 0;
+                chunkThroughputs.forEach(element => {
+                    sumOfChunkThroughputs += element;
+                });
+
+                if (chunkThroughputs.length > 0) {
+                    return sumOfChunkThroughputs / chunkThroughputs.length;
+                }
+            }
+            return null;
+        } catch (e) {
+            return null;
+        }
+    }
+
 
     instance = {
         load: load,

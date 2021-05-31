@@ -93,7 +93,14 @@ function ThroughputHistory(config) {
             throughputMeasureTime = useDeadTimeLatency ? downloadTimeInMilliseconds : latencyTimeInMilliseconds + downloadTimeInMilliseconds;
         }
 
-        const throughput = Math.round((8 * downloadBytes) / throughputMeasureTime); // bits/ms = kbits/s
+        // const throughput = Math.round((8 * downloadBytes) / throughputMeasureTime); // bits/ms = kbits/s
+        let throughput;
+        const throughputCalculatedByChunkFiltering = httpRequest.segmentThroughput;
+        if (throughputCalculatedByChunkFiltering && throughputCalculatedByChunkFiltering !== null) {
+            throughput = throughputCalculatedByChunkFiltering;
+        } else {
+            throughput = Math.round((8 * downloadBytes) / throughputMeasureTime); // bits/ms = kbits/s
+        }
 
         checkSettingsForMediaType(mediaType);
 

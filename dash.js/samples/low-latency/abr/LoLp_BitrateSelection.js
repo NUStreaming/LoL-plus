@@ -111,9 +111,13 @@ function TgcLearningRuleClass() {
         /*
          * Select next quality
          */
-        switchRequest.quality = learningController.getNextQuality(mediaInfo,throughput*1000,latency,currentBufferLevel,playbackRate,current, dynamicWeightsSelector);
-        switchRequest.reason = { throughput: throughput, latency: latency};
-        switchRequest.priority = SwitchRequest.PRIORITY.STRONG;
+        try {
+            switchRequest.quality = learningController.getNextQuality(mediaInfo,throughput*1000,latency,currentBufferLevel,playbackRate,current, dynamicWeightsSelector);
+            switchRequest.reason = { throughput: throughput, latency: latency};
+            switchRequest.priority = SwitchRequest.PRIORITY.STRONG;
+        } catch(e) {
+            console.log("Error while getting next quality: ",e);
+        }
 
         scheduleController.setTimeToLoadDelay(0);
 
