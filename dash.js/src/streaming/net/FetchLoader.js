@@ -309,12 +309,8 @@ function FetchLoader(cfg) {
                     }
                 }
 
-                let sumOfChunkThroughputs = 0;
-                chunkThroughputs.forEach(element => {
-                    sumOfChunkThroughputs += element;
-                });
-
                 if (chunkThroughputs.length > 0) {
+                    const sumOfChunkThroughputs = chunkThroughputs.reduce((a, b) => a + b, 0);
                     return sumOfChunkThroughputs / chunkThroughputs.length;
                 }
             }
