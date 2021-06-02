@@ -155,6 +155,7 @@ function FetchLoader(cfg) {
                         });
 
                         httpRequest.segmentThroughput = calculateThroughputByChunkData(StartTimeData, EndTimeData);
+                        console.log('calculateThroughputByChunkData: ', httpRequest.segmentThroughput);
                         httpRequest.response.response = remaining.buffer;
                     }
                     httpRequest.onload();
@@ -303,7 +304,7 @@ function FetchLoader(cfg) {
                     if (datum[i] && datumE[i]) {
                         let chunkDownloadTime = datumE[i].tse - datum[i].ts;
                         if (chunkDownloadTime > 1) {
-                            chunkThroughputs[i] = (8 * datumE[i].bytes) / chunkDownloadTime;
+                            chunkThroughputs.push((8 * datumE[i].bytes) / chunkDownloadTime);
                         }
                     }
                 }
