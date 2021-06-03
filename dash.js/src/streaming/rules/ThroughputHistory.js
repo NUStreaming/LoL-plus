@@ -91,6 +91,10 @@ function ThroughputHistory(config) {
             // calculated using moofs
             const sumOfThroughputValues = httpRequest.trace.reduce((a, b) => a + b.t, 0);
             throughput = Math.round(sumOfThroughputValues / httpRequest.trace.length);
+            if (throughput === 0) {
+                // not a valid throughput measurement
+                return;
+            }
         } else {
             const throughputMeasureTime = useDeadTimeLatency ? downloadTimeInMilliseconds : latencyTimeInMilliseconds + downloadTimeInMilliseconds;
             throughput = Math.round((8 * downloadBytes) / throughputMeasureTime); // bits/ms = kbits/s
