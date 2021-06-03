@@ -151,11 +151,10 @@ function FetchLoader(cfg) {
                             total: isNaN(totalBytes) ? bytesReceived : totalBytes,
                             lengthComputable: true,
                             time: calculateDownloadedTime(StartTimeData, EndTimeData),
+                            throughput: calculateThroughputByChunkData(StartTimeData, EndTimeData),
                             stream: true
                         });
 
-                        httpRequest.segmentThroughput = calculateThroughputByChunkData(StartTimeData, EndTimeData);
-                        console.log('calculateThroughputByChunkData: ', httpRequest.segmentThroughput);
                         httpRequest.response.response = remaining.buffer;
                     }
                     httpRequest.onload();

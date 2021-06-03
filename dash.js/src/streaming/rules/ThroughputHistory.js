@@ -86,19 +86,13 @@ function ThroughputHistory(config) {
         const downloadTimeInMilliseconds = (httpRequest._tfinish.getTime() - httpRequest.tresponse.getTime()) || 1; //Make sure never 0 we divide by this value. Avoid infinity!
         const downloadBytes = httpRequest.trace.reduce((a, b) => a + b.b[0], 0);
 
-        let throughputMeasureTime;
+        let throughput = 0;
         if (settings.get().streaming.lowLatencyEnabled) {
-            throughputMeasureTime = httpRequest.trace.reduce((a, b) => a + b.d, 0);
+            // calculated using moofs
+            const sumOfThroughputValues = httpRequest.trace.reduce((a, b) => a + b.t, 0);
+            throughput = Math.round(sumOfThroughputValues / httpRequest.trace.length);
         } else {
-            throughputMeasureTime = useDeadTimeLatency ? downloadTimeInMilliseconds : latencyTimeInMilliseconds + downloadTimeInMilliseconds;
-        }
-
-        // const throughput = Math.round((8 * downloadBytes) / throughputMeasureTime); // bits/ms = kbits/s
-        let throughput;
-        const throughputCalculatedByChunkFiltering = httpRequest.segmentThroughput;
-        if (throughputCalculatedByChunkFiltering && throughputCalculatedByChunkFiltering !== null) {
-            throughput = Math.round(throughputCalculatedByChunkFiltering);
-        } else {
+            const throughputMeasureTime = useDeadTimeLatency ? downloadTimeInMilliseconds : latencyTimeInMilliseconds + downloadTimeInMilliseconds;
             throughput = Math.round((8 * downloadBytes) / throughputMeasureTime); // bits/ms = kbits/s
         }
 
