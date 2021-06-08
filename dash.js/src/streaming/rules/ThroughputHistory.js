@@ -93,9 +93,11 @@ function ThroughputHistory(config) {
             throughput = Math.round(sumOfThroughputValues / httpRequest.trace.length);
             if (throughput === 0) {
                 // not a valid throughput measurement
-                return;
+                console.log('Throughput could not be found. Using default dash calculation!');
             }
-        } else {
+        }
+
+        if (throughput === 0) {
             const throughputMeasureTime = useDeadTimeLatency ? downloadTimeInMilliseconds : latencyTimeInMilliseconds + downloadTimeInMilliseconds;
             throughput = Math.round((8 * downloadBytes) / throughputMeasureTime); // bits/ms = kbits/s
         }
