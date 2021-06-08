@@ -294,8 +294,8 @@ function FetchLoader(cfg) {
         try {
             let datum, datumE;
             // Filter the first and last chunks in a segment in both arrays [StartTimeData and EndTimeData]
-            datum = startTimeData.filter((data, i) => i > 0 && i < startTimeData.length - 1);
-            datumE = endTimeData.filter((dataE, i) => i > 0 && i < endTimeData.length - 1);
+            datum = startTimeData.filter((data, i) => i < startTimeData.length - 1);
+            datumE = endTimeData.filter((dataE, i) => i < endTimeData.length - 1);
             let chunkThroughputs = [];
             // Compute the average throughput of the filtered chunk data
             if (datum.length > 1) {
@@ -307,6 +307,9 @@ function FetchLoader(cfg) {
                         if (chunkDownloadTime > 1) {
                             chunkThroughputs.push((8 * datumE[i].bytes) / chunkDownloadTime);
                         } else {
+                            if (shortDurationStartTime === 0) {
+                                shortDurationStartTime = datum[i].ts;
+                            }
                             let cumulatedChunkDownloadTime = datumE[i].tse - shortDurationStartTime;
                             if (cumulatedChunkDownloadTime > 1) {
                                 chunkThroughputs.push((8 * shortDurationBytesReceived) / cumulatedChunkDownloadTime);
@@ -315,9 +318,6 @@ function FetchLoader(cfg) {
                             } else {
                                 // continue cumulating short duration data
                                 shortDurationBytesReceived += datumE[i].bytes;
-                                if (shortDurationStartTime === 0) {
-                                    shortDurationStartTime = datum[i].ts;
-                                }
                             }
                         }
                     }
