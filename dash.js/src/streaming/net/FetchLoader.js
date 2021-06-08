@@ -299,11 +299,26 @@ function FetchLoader(cfg) {
             let chunkThroughputs = [];
             // Compute the average throughput of the filtered chunk data
             if (datum.length > 1) {
+                let shortDurationBytesReceived = 0;
+                let shortDurationStartTime = 0;
                 for (let i = 0; i < datum.length; i++) {
                     if (datum[i] && datumE[i]) {
                         let chunkDownloadTime = datumE[i].tse - datum[i].ts;
                         if (chunkDownloadTime > 1) {
                             chunkThroughputs.push((8 * datumE[i].bytes) / chunkDownloadTime);
+                        } else {
+                            let cumulatedChunkDownloadTime = datumE[i].tse - shortDurationStartTime;
+                            if (cumulatedChunkDownloadTime > 1) {
+                                chunkThroughputs.push((8 * shortDurationBytesReceived) / cumulatedChunkDownloadTime);
+                                shortDurationBytesReceived = 0;
+                                shortDurationStartTime = 0;
+                            } else {
+                                // continue cumulating short duration data
+                                shortDurationBytesReceived += datumE[i].bytes;
+                                if (shortDurationStartTime === 0) {
+                                    shortDurationStartTime = datum[i].ts;
+                                }
+                            }
                         }
                     }
                 }
@@ -313,6 +328,7 @@ function FetchLoader(cfg) {
                     return sumOfChunkThroughputs / chunkThroughputs.length;
                 }
             }
+
             return null;
         } catch (e) {
             return null;
